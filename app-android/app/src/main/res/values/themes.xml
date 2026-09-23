@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.SerraAlerta" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/fundo</item>
+    </style>
+</resources>

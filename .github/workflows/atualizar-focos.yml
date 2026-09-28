@@ -1,0 +1,52 @@
+name: Atualizar focos (agendado)
+
+# Republica o site para renovar o snapshot dos focos de calor do INPE (o build é uma consulta só).
+# A cada 6 h no primeiro mês, às segundas até o 3º mês e depois nunca mais: ao passar da data final,
+# este workflow se desativa sozinho (`gh workflow disable`), sem precisar mexer na interface do GitHub.
+# Push em landing/** e execução manual do pages.yml continuam funcionando normalmente.
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+env:
+  ATUALIZACAO_SEMANAL_A_PARTIR_DE: '2026-10-28'
+  ATUALIZACAO_AGENDADA_ATE: '2026-12-28'
+
+jobs:
+  agenda:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    outputs:
+      rodar: ${{ steps.decidir.outputs.rodar }}
+    steps:
+      - id: decidir
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rodar=true
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            hoje="$(date -u +%F)"
+            if [[ ! "$hoje" < "$ATUALIZACAO_AGENDADA_ATE" ]]; then
+              rodar=false
+              gh workflow disable atualizar-focos.yml --repo "$GITHUB_REPOSITORY"
+            elif [[ ! "$hoje" < "$ATUALIZACAO_SEMANAL_A_PARTIR_DE" ]]; then
+              [ "${{ github.event.schedule }}" = "17 3 * * 1" ] || rodar=false
+            else
+              [ "${{ github.event.schedule }}" = "17 */6 * * *" ] || rodar=false
+            fi
+          fi
+          echo "rodar=$rodar" >> "$GITHUB_OUTPUT"
+
+  publicar:
+    needs: agenda
+    if: needs.agenda.outputs.rodar == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml

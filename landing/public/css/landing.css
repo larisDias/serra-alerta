@@ -157,6 +157,8 @@ strong { font-weight: 650; }
 .hero__lead { font-size: 1.2rem; color: rgba(255, 255, 255, .78); max-width: 34em; }
 .hero__lead strong { color: #fff; }
 .hero__acoes { display: flex; flex-wrap: wrap; gap: 14px; margin: 34px 0 30px; }
+.aviso-apk { font-size: .88rem; color: rgba(255, 255, 255, .55); }
+.hero__acoes + .aviso-apk { margin: -16px 0 28px; }
 .hero__pontos { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px 26px; color: rgba(255, 255, 255, .72); font-size: .95rem; }
 .hero__pontos li { display: inline-flex; align-items: center; gap: 8px; }
 .hero__pontos .ic { color: var(--ambar); }
@@ -473,6 +475,7 @@ strong { font-weight: 650; }
 .final p { color: rgba(255, 255, 255, .72); font-size: 1.15rem; margin-bottom: 36px; }
 .final .btn + .btn { margin-left: 10px; vertical-align: top; }
 .final .btn { vertical-align: top; margin-top: 6px; }
+.final .aviso-apk { font-size: .9rem; color: rgba(255, 255, 255, .55); margin: 22px 0 0; }
 
 /* Rodapé */
 .rodape { background: #0F0D0C; color: rgba(255, 255, 255, .6); padding: 70px 0 30px; font-size: .92rem; }

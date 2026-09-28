@@ -24,6 +24,7 @@
         'menu' => '<path d="M4 6h16M4 12h16M4 18h16"/>',
         'cloudoff' => '<path d="m2 2 20 20"/><path d="M5.78 5.78A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.31-.19"/><path d="M21.53 16.5A4.5 4.5 0 0 0 17.5 10h-1.79A7 7 0 0 0 10 5.07"/>',
         'share' => '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/>',
+        'download' => '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
         'code' => '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>',
         'book' => '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
     ];
@@ -82,9 +83,10 @@
                 focos de calor do INPE — <strong>sem cadastro</strong> e funcionando até sem internet.
             </p>
             <div class="hero__acoes">
-                <a href="#como" class="btn btn--brasa">Ver como funciona {!! $ic('arrow') !!}</a>
-                <a href="#problema" class="btn btn--vidro">Entenda o problema</a>
+                <a href="{{ $apk }}" class="btn btn--brasa" target="_blank" rel="noopener">{!! $ic('download') !!} Baixar para Android</a>
+                <a href="#como" class="btn btn--vidro">Ver como funciona {!! $ic('arrow') !!}</a>
             </div>
+            <p class="aviso-apk">Grátis · Android 7.0 ou mais novo · na instalação, permita instalar apps de fontes desconhecidas.</p>
             <ul class="hero__pontos">
                 <li>{!! $ic('camera') !!} Foto</li>
                 <li>{!! $ic('pin') !!} GPS automático</li>
@@ -502,8 +504,10 @@
     <div class="container final__inner revelar">
         <h2>A Serra da Paulista precisa de mais olhos.</h2>
         <p>Cada relato encurta o caminho entre a primeira fumaça e a primeira equipe em campo.</p>
-        <a href="{{ route('app.demo') }}" class="btn btn--brasa" target="_blank">Experimentar o protótipo {!! $ic('arrow') !!}</a>
+        <a href="{{ $apk }}" class="btn btn--brasa" target="_blank" rel="noopener">{!! $ic('download') !!} Baixar para Android</a>
+        <a href="{{ route('app.demo') }}" class="btn btn--vidro" target="_blank">Experimentar o protótipo {!! $ic('arrow') !!}</a>
         <a href="{{ $repositorio }}" class="btn btn--vidro" target="_blank" rel="noopener">{!! $ic('code') !!} Código no GitHub</a>
+        <p class="aviso-apk">Grátis · Android 7.0 ou mais novo · na instalação, permita instalar apps de fontes desconhecidas.</p>
     </div>
 </section>
 
@@ -516,6 +520,7 @@
             </a>
             <p>Projetos de Extensão — Documento-síntese, edição 2026/2. Instituto Federal de Educação, Ciência e Tecnologia de São Paulo, Câmpus São João da Boa Vista.</p>
             <div class="rodape__links">
+                <a href="{{ $apk }}" target="_blank" rel="noopener">Baixar o app (APK)</a>
                 <a href="{{ route('app.demo') }}" target="_blank">Demonstração do app</a>
                 <a href="{{ $repositorio }}/tree/main/app-android" target="_blank" rel="noopener">Código do app Android</a>
                 <a href="https://terrabrasilis.dpi.inpe.br/queimadas/portal/" target="_blank" rel="noopener">Portal BDQueimadas (INPE)</a>

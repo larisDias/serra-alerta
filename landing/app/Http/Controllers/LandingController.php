@@ -12,6 +12,8 @@ class LandingController extends Controller
         return view('landing', [
             'totalRelatos' => Relato::count(),
             'repositorio' => 'https://github.com/larisDias/serra-alerta',
+            // Página da versão mais recente do APK (publicada pelo workflow release-apk.yml ao criar uma tag v*).
+            'apk' => 'https://github.com/larisDias/serra-alerta/releases/latest',
 
             // Focos de calor por período (BDQueimadas/INPE), conforme o documento-síntese.
             'focos2020' => [

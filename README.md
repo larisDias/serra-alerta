@@ -59,13 +59,17 @@ Para mostrar a demo num celular de verdade na mesma rede Wi-Fi, rode `php artisa
 Pela linha de comando: `./gradlew :app:testDebugUnitTest :app:assembleDebug` dentro de `app-android/`; o APK sai em
 `app-android/app/build/outputs/apk/debug/app-debug.apk`.
 
+### Publicar uma nova versão do APK
+
+Crie e envie uma tag `v*` (ex.: `git tag v1.0.1 && git push origin v1.0.1`). O workflow
+`.github/workflows/release-apk.yml` gera o APK e o anexa a uma release do GitHub. Os botões **Baixar para Android** da
+landing apontam para `/releases/latest`, então passam a oferecer a versão nova sem mudar o site.
+
 No emulador, defina a localização em *Extended controls → Location* para um ponto de São João da Boa Vista
 (ex.: `-21.9694, -46.7981`).
 
 ## Pendências (para o grupo)
 
-- **APK:** gerar com `mise run android:apk` (ou `./gradlew :app:assembleDebug` em `app-android/`, com JDK 25) e publicar,
-  por exemplo em uma release do GitHub, para colocar o link de download na landing.
 - **Testar no aparelho:** os testes automáticos passam (`mise run site:test` e `mise run android:test`), mas a leitura
   dos focos do INPE no app e a interface nova da demo (galeria de fotos, exclusão, configurações) ainda não foram
   conferidas na tela.

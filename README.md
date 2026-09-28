@@ -33,12 +33,13 @@ Abra:
 `php artisan migrate:fresh --seed` restaura os 8 relatos de exemplo. Rode antes da apresentação para limpar os relatos de teste.
 
 A demo web reproduz as telas do app: introdução, mapa com relatos e focos do INPE, filtros por período e categoria,
-registro (foto obrigatória, categoria, localização com ajuste no mapa, descrição), confirmação, detalhes, foco oficial,
-lista de relatos, prevenção, emergência e sobre. As categorias são as mesmas do app: queima controlada, queimada
+registro (de 1 a 3 fotos, categoria, localização com ajuste no mapa, descrição), confirmação, detalhes, foco oficial,
+lista de relatos, prevenção, emergência, configurações e sobre. Relatos enviados pelo navegador podem ser
+excluídos (o servidor devolve um token de exclusão que fica guardado no `localStorage`). As categorias são as mesmas do app: queima controlada, queimada
 irregular, incêndio florestal e fumaça não identificada.
 
 Os focos de calor vêm dos CSVs diários públicos do INPE (`dataserver-coids.inpe.br`), filtrados para o mesmo recorte
-do app e guardados em cache pelo Laravel. Sem internet, a camada aparece como indisponível e o resto funciona normalmente.
+do app (que lê os CSVs dos últimos 7 dias direto no aparelho) e guardados em cache pelo Laravel no site. Sem internet, a camada aparece como indisponível e o resto funciona normalmente.
 
 ### Dica para a apresentação
 
@@ -63,13 +64,14 @@ No emulador, defina a localização em *Extended controls → Location* para um 
 
 ## Pendências (para o grupo)
 
-- **Focos do INPE no app Android:** o endpoint usado em `app-android/app/src/main/java/br/ifsp/serraalerta/sync/FocosOficiaisDataSource.kt`
-  (`queimadas.dgi.inpe.br/.../focos.json`) passou a responder 404, então o app mostra "Focos INPE indisponíveis".
-  Uma fonte que funciona são os CSVs diários públicos:
-  `https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_AAAAMMDD.csv`
-  (colunas `id, lat, lon, data_hora_gmt, satelite, municipio, ..., frp`). O site já usa essa fonte em
-  `landing/app/Http/Controllers/FocoController.php`, que pode servir de referência para o parser em Kotlin.
-- **APK:** gerar com JDK 25 (`./gradlew :app:assembleDebug` em `app-android/`) e publicar, por exemplo em uma
-  release do GitHub, para colocar o link de download na landing.
-- **Demo web x app:** a demo aceita 1 foto por relato (o app aceita 3), não tem exclusão de relato nem a tela de
-  configurações.
+- **APK:** gerar com `mise run android:apk` (ou `./gradlew :app:assembleDebug` em `app-android/`, com JDK 25) e publicar,
+  por exemplo em uma release do GitHub, para colocar o link de download na landing.
+- **Testar no aparelho:** os testes automáticos passam (`mise run site:test` e `mise run android:test`), mas a leitura
+  dos focos do INPE no app e a interface nova da demo (galeria de fotos, exclusão, configurações) ainda não foram
+  conferidas na tela.
+
+## Rodar sem instalar nada (mise)
+
+O `mise.toml` da raiz traz JDK 25, PHP e composer, e tarefas prontas: `mise run site:setup`, `site:test`, `site:serve`,
+`android:sdk` (baixa o SDK do Android só com as ferramentas de linha de comando, sem o Android Studio),
+`android:test` e `android:apk`. O PHP pré-compilado do `mise.toml` é para Linux x64/WSL; em Windows/macOS use o PHP local.

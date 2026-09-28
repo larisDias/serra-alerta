@@ -34,22 +34,49 @@ class RelatoController extends Controller
             'longitude' => ['required', 'numeric', 'between:-47.3,-46.3'],
             'descricao' => ['nullable', 'string', 'max:280'],
             'ajustada_manualmente' => ['sometimes', 'boolean'],
-            // Como no app, a foto é obrigatória.
-            'foto' => ['required', 'image', 'max:6144'],
+            // Como no app, ao menos uma foto é obrigatória, até o limite de 3.
+            'fotos' => ['required', 'array', 'min:1', 'max:' . Relato::MAX_FOTOS],
+            'fotos.*' => ['image', 'max:6144'],
         ], [
             'categoria.*' => 'Escolha o que você está vendo.',
             'latitude.*' => 'Local fora da área de cobertura do protótipo.',
             'longitude.*' => 'Local fora da área de cobertura do protótipo.',
             'descricao.max' => 'A descrição deve ter no máximo 280 caracteres.',
-            'foto.required' => 'Tire ou escolha uma foto da ocorrência.',
-            'foto.*' => 'A foto deve ser uma imagem de até 6 MB.',
+            'fotos.required' => 'Tire ou escolha uma foto da ocorrência.',
+            'fotos.min' => 'Tire ou escolha uma foto da ocorrência.',
+            'fotos.max' => 'Envie no máximo ' . Relato::MAX_FOTOS . ' fotos.',
+            'fotos.*' => 'As fotos devem ser imagens de até 6 MB.',
         ]);
 
-        $arquivo = $request->file('foto');
-        $nome = now()->format('Ymd_His') . '_' . Str::random(6) . '.' . $arquivo->extension();
-        $arquivo->move(public_path('uploads'), $nome);
-        $dados['foto'] = $nome;
+        $nomes = [];
+        foreach ($request->file('fotos') as $arquivo) {
+            $nome = now()->format('Ymd_His') . '_' . Str::random(6) . '.' . $arquivo->extension();
+            $arquivo->move(public_path('uploads'), $nome);
+            $nomes[] = $nome;
+        }
+        $dados['fotos'] = $nomes;
+        $dados['foto'] = $nomes[0];
+        $token = Str::random(40);
+        $dados['token_exclusao'] = hash('sha256', $token);
 
-        return response()->json(['data' => Relato::create($dados)], 201);
+        // O token em claro só é devolvido aqui; o navegador o guarda para permitir a exclusão.
+        return response()->json(['data' => Relato::create($dados), 'token' => $token], 201);
+    }
+
+    public function destroy(Request $request, Relato $relato): JsonResponse
+    {
+        $token = (string) $request->input('token', $request->bearerToken());
+        abort_unless(
+            $relato->token_exclusao && $token !== '' && hash_equals($relato->token_exclusao, hash('sha256', $token)),
+            403,
+            'Só quem enviou o relato pode excluí-lo.'
+        );
+
+        foreach ($relato->arquivos() as $nome) {
+            @unlink(public_path('uploads/' . basename($nome)));
+        }
+        $relato->delete();
+
+        return response()->json(null, 204);
     }
 }

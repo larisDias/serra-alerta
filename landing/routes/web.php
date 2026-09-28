@@ -13,5 +13,6 @@ Route::view('/app', 'app-demo')->name('app.demo');
 Route::prefix('api')->group(function () {
     Route::get('/relatos', [RelatoController::class, 'index'])->name('api.relatos.index');
     Route::post('/relatos', [RelatoController::class, 'store'])->name('api.relatos.store');
+    Route::delete('/relatos/{relato}', [RelatoController::class, 'destroy'])->name('api.relatos.destroy');
     Route::get('/focos', FocoController::class)->name('api.focos');
 });

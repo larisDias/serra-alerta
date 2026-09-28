@@ -32,9 +32,11 @@
         'tractor' => '<path d="m10 11 11 .9a1 1 0 0 1 .8 1.1l-.67 4.16a1 1 0 0 1-.99.84H20"/><path d="M16 18h-5"/><path d="M18 5a1 1 0 0 0-1 1v5.57"/><path d="M3 4h8.13a1 1 0 0 1 .99.86L13 11.25"/><path d="M4 11V4"/><path d="M8 10.1V4"/><circle cx="18" cy="18" r="2"/><circle cx="7" cy="15" r="5"/>',
         'trees' => '<path d="M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/><path d="M7 16v6M13 19v3"/><path d="M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5"/>',
         'cloud' => '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+        'trash' => '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6M14 11v6"/>',
+        'lock' => '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
     ];
     $ic = fn ($n) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$i[$n].'</svg>';
-    $iconesJs = collect(['tractor', 'flame', 'trees', 'cloud', 'check', 'pin', 'pinoff', 'arrow', 'info', 'satellite', 'camera', 'list'])->mapWithKeys(fn ($n) => [$n => $ic($n)])->all();
+    $iconesJs = collect(['tractor', 'flame', 'trees', 'cloud', 'check', 'pin', 'pinoff', 'arrow', 'info', 'satellite', 'camera', 'list', 'close', 'trash'])->mapWithKeys(fn ($n) => [$n => $ic($n)])->all();
     $equipe = ['André Lyra Fernandes', 'Gabriel Maia Miguel', 'Larissa Gabriela Sant’Angelo Dias', 'Mariana Peixoto Chahud', 'Victoria Carolina Ferreira da Silva'];
 @endphp
 <!DOCTYPE html>
@@ -82,7 +84,7 @@
                     <strong>Serra Alerta</strong>
                     <span class="eyebrow">São João da Boa Vista · SP</span>
                 </div>
-                <button class="btn-circulo sem-borda" data-ir="sobre" aria-label="Sobre o projeto">{!! $ic('settings') !!}</button>
+                <button class="btn-circulo sem-borda" data-ir="config" aria-label="Configurações">{!! $ic('settings') !!}</button>
             </header>
             <div class="chips">
                 <button class="chip ativo" id="chipPeriodo">{!! $ic('clock') !!}<span>Últimos 7 dias</span></button>
@@ -203,12 +205,9 @@
         </header>
         <div class="rolagem rolagem--form">
             <div class="secao-form">
-                <div class="secao-form__topo"><span class="eyebrow">Foto · obrigatória</span><button class="link" id="refazerFoto" hidden>{!! $ic('refresh') !!}Refazer</button><span class="eyebrow" id="contaFotos">0/1</span></div>
-                <input type="file" accept="image/*" capture="environment" id="inputFoto" hidden>
-                <div class="fotos">
-                    <div class="foto" id="fotoPreview" hidden><img alt="Foto da ocorrência"><button class="btn-circulo btn-circulo--vidro" id="removerFoto" aria-label="Remover foto">{!! $ic('close') !!}</button></div>
-                    <button class="foto-add" id="fotoAdd"><span>{!! $ic('camera') !!}</span>Tirar foto</button>
-                </div>
+                <div class="secao-form__topo"><span class="eyebrow">Fotos · ao menos 1, até 3</span><span class="eyebrow" id="contaFotos">0/3</span></div>
+                <input type="file" accept="image/*" capture="environment" id="inputFoto" multiple hidden>
+                <div class="fotos" id="fotos"></div>
             </div>
             <div class="secao-form">
                 <span class="eyebrow">O que você está vendo?</span>
@@ -280,6 +279,7 @@
         <div class="detalhe__foto" id="detalheFoto"></div>
         <div class="detalhe__barra">
             <button class="btn-circulo btn-circulo--vidro" data-voltar aria-label="Voltar">{!! $ic('back') !!}</button>
+            <button class="btn-circulo btn-circulo--vidro" id="excluirRelato" aria-label="Excluir relato" hidden>{!! $ic('trash') !!}</button>
         </div>
         <div class="rolagem detalhe__rolagem">
             <div class="detalhe__folha" id="detalheConteudo"></div>
@@ -301,6 +301,38 @@
         <footer class="rodape-acao rodape-acao--limpo">
             <button class="botao botao--carvao" data-registrar>{!! $ic('camera') !!}Registrar o que estou vendo</button>
         </footer>
+    </section>
+
+    {{-- ================= CONFIGURAÇÕES ================= --}}
+    <section class="tela-app" id="tela-config" hidden>
+        <header class="cabeca cabeca--voltar">
+            <button class="btn-circulo" data-voltar aria-label="Voltar">{!! $ic('back') !!}</button>
+            <span class="eyebrow">Preferências deste navegador</span>
+            <h1>Configurações</h1>
+        </header>
+        <div class="rolagem">
+            <span class="eyebrow secao">Localização</span>
+            <div class="cartao-base">
+                <label class="camada-linha"><span class="camada-linha__marca">{!! $ic('gps') !!}</span><span><strong>GPS de alta precisão ao registrar</strong><small>Desligado, economiza bateria e pode ser menos exato</small></span><input type="checkbox" class="switch" id="cfgGps" checked></label>
+            </div>
+            <span class="eyebrow secao">Dados</span>
+            <div class="cartao-base">
+                <label class="camada-linha"><span class="camada-linha__marca inpe">{!! $ic('satellite') !!}</span><span><strong>Atualizar focos do INPE ao abrir o mapa</strong><small id="cfgUltimaAtualizacao">Última atualização: nunca</small></span><input type="checkbox" class="switch" id="cfgFocos" checked></label>
+                <hr>
+                <div class="camada-linha"><span class="camada-linha__marca">{!! $ic('list') !!}</span><span><strong>Histórico deste aparelho</strong><small id="cfgHistorico">0 relatos enviados daqui</small></span></div>
+                <hr>
+                <button class="camada-linha camada-linha--acao" id="cfgLimpar"><span class="camada-linha__marca perigo">{!! $ic('trash') !!}</span><span><strong>Limpar histórico deste aparelho</strong><small>Exclui da base os relatos enviados daqui</small></span></button>
+            </div>
+            <span class="eyebrow secao">Privacidade e projeto</span>
+            <div class="cartao-base">
+                <button class="camada-linha camada-linha--acao" id="cfgPrivacidade"><span class="camada-linha__marca">{!! $ic('lock') !!}</span><span><strong>Política de privacidade</strong><small>Nenhum dado pessoal é coletado</small></span></button>
+                <p class="cfg-texto" id="cfgPrivacidadeTexto" hidden>O Serra Alerta não exige conta e não coleta dados pessoais identificáveis. Nesta demonstração, fotos, localização e descrições dos relatos vão para a base do site, que é apagada antes das apresentações. Focos oficiais são consultados de fonte pública do INPE/BDQueimadas.</p>
+                <hr>
+                <button class="camada-linha camada-linha--acao" data-ir="sobre"><span class="camada-linha__marca">{!! $ic('info') !!}</span><span><strong>Sobre o projeto</strong><small>IFSP · São João da Boa Vista</small></span></button>
+                <hr>
+                <button class="camada-linha camada-linha--acao" id="reverIntro"><span class="camada-linha__marca">{!! $ic('refresh') !!}</span><span><strong>Rever introdução</strong><small>Mostra de novo as telas de boas-vindas</small></span></button>
+            </div>
+        </div>
     </section>
 
     {{-- ================= SOBRE ================= --}}
@@ -338,7 +370,6 @@
                 <span class="eyebrow">Privacidade</span>
                 <small>O Serra Alerta não exige conta e não coleta dados pessoais identificáveis. No app Android, fotos, localização e descrições ficam no próprio aparelho; nesta demonstração, os relatos vão para a base do site.</small>
             </div>
-            <button class="botao botao--contorno" id="reverIntro">{!! $ic('refresh') !!}Rever introdução</button>
         </div>
     </section>
 

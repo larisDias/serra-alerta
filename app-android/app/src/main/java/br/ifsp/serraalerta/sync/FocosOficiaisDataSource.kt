@@ -5,97 +5,59 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import br.ifsp.serraalerta.domain.model.FocoOficial
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 
+/** Busca os CSVs diários públicos do INPE dos últimos [DIAS] dias, o mesmo recorte usado pelo site. */
 class FocosOficiaisDataSource(private val context: Context) {
     companion object {
-        private const val ENDPOINT =
-            "https://queimadas.dgi.inpe.br/queimadas/portal-static/estaticos/focos/focos.json"
-        private const val MIN_LAT = -22.2
-        private const val MAX_LAT = -21.5
-        private const val MIN_LON = -47.4
-        private const val MAX_LON = -46.7
+        private const val URL_DIARIO =
+            "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_%s.csv"
+        private const val DIAS = 7
     }
 
     suspend fun buscarFocos(): List<FocoOficial> = withContext(Dispatchers.IO) {
         check(estaConectado()) { "Sem conexão com a internet" }
-        val connection = (URL(ENDPOINT).openConnection() as HttpURLConnection).apply {
+        val resultados = coroutineScope {
+            datasRecentes().map { data -> async { runCatching { baixarDia(data) } } }.awaitAll()
+        }
+        // O arquivo do dia corrente pode ainda não existir; só falha se nenhum dia respondeu.
+        check(resultados.any { it.isSuccess }) {
+            "Fonte oficial indisponível (${resultados.firstNotNullOfOrNull { it.exceptionOrNull()?.message }})"
+        }
+        resultados.flatMap { it.getOrDefault(emptyList()) }.distinctBy { it.id }
+    }
+
+    private fun datasRecentes(): List<String> {
+        val formato = SimpleDateFormat("yyyyMMdd", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
+        val calendario = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        return List(DIAS) {
+            formato.format(calendario.time).also { calendario.add(Calendar.DAY_OF_MONTH, -1) }
+        }
+    }
+
+    private fun baixarDia(data: String): List<FocoOficial> {
+        val connection = (URL(URL_DIARIO.format(data)).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = 8_000
-            readTimeout = 12_000
+            readTimeout = 25_000
             doInput = true
-            setRequestProperty("Accept", "application/json")
             setRequestProperty("User-Agent", "SerraAlerta/1.0 Android")
         }
         try {
-            check(connection.responseCode in 200..299) { "Fonte oficial indisponível (${connection.responseCode})" }
-            val payload = connection.inputStream.bufferedReader().use { it.readText() }
-            parse(payload)
+            check(connection.responseCode in 200..299) { "HTTP ${connection.responseCode}" }
+            return connection.inputStream.bufferedReader().use { FocosCsvParser.parse(it) }
         } finally {
             connection.disconnect()
         }
-    }
-
-    private fun parse(payload: String): List<FocoOficial> {
-        val root = payload.trim()
-        val array = when {
-            root.startsWith("[") -> JSONArray(root)
-            else -> {
-                val objectRoot = JSONObject(root)
-                when {
-                    objectRoot.optJSONArray("features") != null -> objectRoot.optJSONArray("features")!!
-                    objectRoot.optJSONArray("data") != null -> objectRoot.optJSONArray("data")!!
-                    objectRoot.optJSONArray("focos") != null -> objectRoot.optJSONArray("focos")!!
-                    else -> JSONArray()
-                }
-            }
-        }
-        return buildList {
-            for (index in 0 until array.length()) {
-                val raw = array.optJSONObject(index) ?: continue
-                val properties = raw.optJSONObject("properties") ?: raw
-                val latitude = properties.number("latitude", "lat") ?: continue
-                val longitude = properties.number("longitude", "lon", "long") ?: continue
-                if (latitude !in MIN_LAT..MAX_LAT || longitude !in MIN_LON..MAX_LON) continue
-                val date = parseDate(properties.string("datahora", "data_hora", "date"))
-                add(
-                    FocoOficial(
-                        id = properties.string("id", "fid") ?: "inpe-$index-$latitude-$longitude",
-                        latitude = latitude,
-                        longitude = longitude,
-                        dataDeteccao = date,
-                        frp = properties.number("frp", "potencia_radiativa"),
-                        fonte = "INPE/BDQueimadas"
-                    )
-                )
-            }
-        }
-    }
-
-    private fun JSONObject.number(vararg keys: String): Double? = keys.firstNotNullOfOrNull { key ->
-        when (val value = opt(key)) {
-            is Number -> value.toDouble()
-            is String -> value.replace(',', '.').toDoubleOrNull()
-            else -> null
-        }
-    }
-
-    private fun JSONObject.string(vararg keys: String): String? = keys.firstNotNullOfOrNull { key ->
-        optString(key).takeIf { it.isNotBlank() && it != "null" }
-    }
-
-    private fun parseDate(value: String?): Long {
-        if (value == null) return System.currentTimeMillis()
-        val patterns = listOf("yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss", "dd/MM/yyyy HH:mm:ss")
-        return patterns.firstNotNullOfOrNull { pattern ->
-            runCatching { SimpleDateFormat(pattern, Locale.US).parse(value)?.time }.getOrNull()
-        } ?: System.currentTimeMillis()
     }
 
     private fun estaConectado(): Boolean {

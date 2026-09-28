@@ -73,7 +73,15 @@
         try { return JSON.parse(localStorage.getItem(chave)) ?? padrao; } catch { return padrao; }
     };
     const armazenar = (chave, valor) => { try { localStorage.setItem(chave, JSON.stringify(valor)); } catch { /* modo privado */ } };
-    const meus = new Set(armazenado('serra-alerta:meus', []));
+    // Relatos enviados deste navegador: id -> token de exclusão (formato antigo era só a lista de ids).
+    const MAX_FOTOS = 3;
+    const salvos = armazenado('serra-alerta:meus', {});
+    const meus = new Map(Array.isArray(salvos) ? salvos.map(id => [id, null]) : Object.entries(salvos).map(([id, t]) => [Number(id), t]));
+    const salvarMeus = () => armazenar('serra-alerta:meus', Object.fromEntries(meus));
+
+    // Preferências da tela de configurações (Preferences.kt do app).
+    const prefs = { gpsAltaPrecisao: true, atualizarFocos: true, ...armazenado('serra-alerta:prefs', {}) };
+    const salvarPrefs = () => armazenar('serra-alerta:prefs', prefs);
 
     let toastTimer;
     const toast = (msg) => {
@@ -161,7 +169,7 @@
         navigator.geolocation.getCurrentPosition(
             (p) => ok({ pos: [p.coords.latitude, p.coords.longitude], precisao: p.coords.accuracy }),
             (e) => ok({ erro: e.code === 1 ? 'permissao' : 'falha' }),
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+            { enableHighAccuracy: prefs.gpsAltaPrecisao, timeout: 10000, maximumAge: 30000 },
         );
     });
 
@@ -293,6 +301,7 @@
         $$('.dock__item').forEach(b => b.classList.toggle('ativo', b.dataset.aba === atual));
         if (atual === 'mapa' || atual === 'ajuste') setTimeout(() => mapa.invalidateSize(), 0);
         if (atual === 'relatos') desenharRelatos();
+        if (atual === 'config') desenharConfig();
         requestAnimationFrame(() => desenharTopos($(`#tela-${atual}`) || app));
     };
     const ir = (tela) => { pilha.push(tela); mostrar(); };
@@ -318,8 +327,10 @@
     const abrirDetalhe = (r) => {
         relatoAberto = r;
         const c = CATEGORIAS[r.categoria];
-        $('#detalheFoto').innerHTML = r.foto_url
-            ? `<img src="${esc(r.foto_url)}" alt="Foto do relato">`
+        const fotos = r.fotos_urls?.length ? r.fotos_urls : (r.foto_url ? [r.foto_url] : []);
+        $('#detalheFoto').innerHTML = fotos.length
+            ? `<div class="galeria">${fotos.map((u, i) => `<img src="${esc(u)}" alt="Foto ${i + 1} de ${fotos.length} do relato">`).join('')}</div>`
+                + (fotos.length > 1 ? `<span class="galeria__conta">1/${fotos.length}</span>` : '')
             : '<canvas class="topo-art" data-cor="#FF7A45" data-centro=".5,.45" data-niveis="12"></canvas><span class="sem-foto">Relato de exemplo, sem foto</span>';
         $('#detalheConteudo').innerHTML = `
             <div class="detalhe__meta">${glifo(r.categoria)}<span class="eyebrow">${data(r.created_at)} · ${tempo(r.created_at)}</span></div>
@@ -332,8 +343,42 @@
                 <small>${r.ajustada_manualmente ? 'Posição ajustada manualmente' : 'GPS'}</small></div>
             </div>
             <p class="nota">${IC.info}<span>Alerta preliminar enviado por um cidadão. Não substitui a verificação dos órgãos competentes.</span></p>`;
+        const galeria = $('#detalheFoto .galeria');
+        if (fotos.length > 1) galeria.onscroll = () => {
+            $('#detalheFoto .galeria__conta').textContent = `${Math.round(galeria.scrollLeft / galeria.clientWidth) + 1}/${fotos.length}`;
+        };
+        $('#excluirRelato').hidden = !meus.get(r.id);
         $('#tela-detalhe .detalhe__rolagem').scrollTop = 0;
         ir('detalhe');
+    };
+
+    /* ---------- Exclusão (só de relatos enviados deste navegador) ---------- */
+    const excluirNaBase = async (r) => {
+        // Relatos enviados antes do token existir não podem mais ser excluídos; só saem do histórico local.
+        if (!meus.get(r.id)) { meus.delete(r.id); salvarMeus(); return; }
+        const resp = await fetch(`${API}/${r.id}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': CSRF, Accept: 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: meus.get(r.id) }),
+        });
+        // 404: já não existe na base (por exemplo, depois de um migrate:fresh).
+        if (!resp.ok && resp.status !== 404) throw new Error();
+        relatos = relatos.filter(x => x.id !== r.id);
+        meus.delete(r.id);
+        salvarMeus();
+    };
+    $('#excluirRelato').onclick = async () => {
+        const r = relatoAberto;
+        if (!r || !confirm('Excluir este relato? A foto e o registro serão apagados da base e a ação não pode ser desfeita.')) return;
+        try {
+            await excluirNaBase(r);
+            relatoAberto = null;
+            desenharMapa();
+            voltar();
+            toast('Relato excluído.');
+        } catch {
+            toast('Não foi possível excluir o relato.');
+        }
     };
 
     const compartilhar = async () => {
@@ -428,6 +473,28 @@
         desenharRelatos();
     });
 
+    /* ---------- Configurações (SettingsScreen.kt) ---------- */
+    const desenharConfig = () => {
+        $('#cfgGps').checked = prefs.gpsAltaPrecisao;
+        $('#cfgFocos').checked = prefs.atualizarFocos;
+        $('#cfgUltimaAtualizacao').textContent = 'Última atualização: ' + (focosAtualizados ? `${data(new Date(focosAtualizados).toISOString(), false)}` : 'nunca');
+        const n = relatos.filter(r => meus.has(r.id)).length;
+        $('#cfgHistorico').textContent = `${plural(n, 'relato enviado', 'relatos enviados')} daqui`;
+        $('#cfgLimpar').disabled = n === 0;
+    };
+    $('#cfgGps').onchange = (e) => { prefs.gpsAltaPrecisao = e.target.checked; salvarPrefs(); };
+    $('#cfgFocos').onchange = (e) => { prefs.atualizarFocos = e.target.checked; salvarPrefs(); };
+    $('#cfgPrivacidade').onclick = () => { $('#cfgPrivacidadeTexto').hidden = !$('#cfgPrivacidadeTexto').hidden; };
+    $('#cfgLimpar').onclick = async () => {
+        const seus = relatos.filter(r => meus.has(r.id));
+        if (!seus.length || !confirm(`${plural(seus.length, 'relato e sua foto serão apagados', 'relatos e suas fotos serão apagados')} da base. Esta ação não pode ser desfeita.`)) return;
+        const resultados = await Promise.allSettled(seus.map(excluirNaBase));
+        const falhas = resultados.filter(x => x.status === 'rejected').length;
+        desenharMapa();
+        desenharConfig();
+        toast(falhas ? `Não foi possível excluir ${plural(falhas, 'relato', 'relatos')}.` : 'Histórico apagado deste aparelho.');
+    };
+
     /* ---------- Prevenção / introdução ---------- */
     const listaCategorias = (chaves, campo) => chaves.map(k => `<div class="lista-cat__item">${glifo(k)}<div><strong>${CATEGORIAS[k].rotulo}</strong><small>${CATEGORIAS[k][campo]}</small></div></div>`).join('');
     $('#listaCatPrevencao').innerHTML = listaCategorias(['queima_controlada', 'queimada_irregular', 'incendio_florestal'], 'prevencao');
@@ -520,7 +587,7 @@
     };
 
     /* ---------- Registro ---------- */
-    const rascunho = { foto: null, categoria: null, gps: null, precisao: null, ajustada: null, localizando: false, erro: null };
+    const rascunho = { fotos: [], categoria: null, gps: null, precisao: null, ajustada: null, localizando: false, erro: null };
     const posicao = () => rascunho.ajustada || rascunho.gps;
 
     $('#opcoesCategoria').innerHTML = Object.entries(CATEGORIAS).map(([k, c]) => `
@@ -538,12 +605,8 @@
     const atualizarRegistro = () => {
         $$('#opcoesCategoria .opcao-cat').forEach(b => b.setAttribute('aria-checked', b.dataset.cat === rascunho.categoria));
 
-        // Foto
-        const temFoto = !!rascunho.foto;
-        $('#fotoPreview').hidden = !temFoto;
-        $('#fotoAdd').hidden = temFoto;
-        $('#refazerFoto').hidden = !temFoto;
-        $('#contaFotos').textContent = `${temFoto ? 1 : 0}/1`;
+        const temFoto = rascunho.fotos.length > 0;
+        $('#contaFotos').textContent = `${rascunho.fotos.length}/${MAX_FOTOS}`;
 
         // Localização (LocationSection do RegistrationScreen.kt)
         const pos = posicao();
@@ -572,6 +635,14 @@
             : `${IC.check}<span>Vai direto para o mapa colaborativo</span>`;
     };
 
+    const desenharFotos = () => {
+        const n = rascunho.fotos.length;
+        $('#fotos').innerHTML = rascunho.fotos.map((f, i) => `
+            <div class="foto"><img src="${f.url}" alt="Foto ${i + 1} da ocorrência">
+                <button class="btn-circulo btn-circulo--vidro" data-remover="${i}" aria-label="Remover foto ${i + 1}">${IC.close}</button></div>`).join('')
+            + (n < MAX_FOTOS ? `<button class="foto-add${n ? ' foto-add--mini' : ''}" data-adicionar><span>${IC.camera}</span>${n ? 'Adicionar' : 'Tirar foto'}</button>` : '');
+    };
+
     const localizar = async () => {
         rascunho.localizando = true;
         rascunho.erro = null;
@@ -584,10 +655,12 @@
     };
 
     const iniciarRegistro = () => {
-        Object.assign(rascunho, { foto: null, categoria: null, gps: null, precisao: null, ajustada: null, localizando: false, erro: null });
+        rascunho.fotos.forEach(f => URL.revokeObjectURL(f.url));
+        Object.assign(rascunho, { fotos: [], categoria: null, gps: null, precisao: null, ajustada: null, localizando: false, erro: null });
         $('#descricao').value = '';
         $('#inputFoto').value = '';
         $('.rolagem--form').scrollTop = 0;
+        desenharFotos();
         pilha = [...pilha.filter(t => ABAS.includes(t)), 'registro'];
         mostrar();
         atualizarRegistro();
@@ -596,14 +669,22 @@
         $('#inputFoto').click();
     };
 
-    $('#fotoAdd').onclick = () => $('#inputFoto').click();
-    $('#refazerFoto').onclick = () => $('#inputFoto').click();
-    $('#removerFoto').onclick = () => { rascunho.foto = null; $('#inputFoto').value = ''; atualizarRegistro(); };
+    $('#fotos').onclick = (e) => {
+        if (e.target.closest('[data-adicionar]')) return $('#inputFoto').click();
+        const remover = e.target.closest('[data-remover]');
+        if (!remover) return;
+        const [f] = rascunho.fotos.splice(+remover.dataset.remover, 1);
+        URL.revokeObjectURL(f.url);
+        desenharFotos();
+        atualizarRegistro();
+    };
     $('#inputFoto').onchange = (e) => {
-        const f = e.target.files[0];
-        if (!f) return;
-        rascunho.foto = f;
-        $('#fotoPreview img').src = URL.createObjectURL(f);
+        const livres = MAX_FOTOS - rascunho.fotos.length;
+        const novas = [...e.target.files].slice(0, livres);
+        if (e.target.files.length > livres) toast(`Máximo de ${MAX_FOTOS} fotos por relato.`);
+        e.target.value = '';
+        novas.forEach(file => rascunho.fotos.push({ file, url: URL.createObjectURL(file) }));
+        desenharFotos();
         atualizarRegistro();
     };
     $('#tentarGps').onclick = localizar;
@@ -635,7 +716,7 @@
 
     $('#enviarRelato').onclick = async () => {
         const pos = posicao();
-        if (!rascunho.foto || !pos || !rascunho.categoria) return;
+        if (!rascunho.fotos.length || !pos || !rascunho.categoria) return;
         const btn = $('#enviarRelato');
         const dados = new FormData();
         dados.append('categoria', rascunho.categoria);
@@ -643,7 +724,7 @@
         dados.append('longitude', pos[1].toFixed(6));
         dados.append('descricao', $('#descricao').value.trim());
         dados.append('ajustada_manualmente', rascunho.ajustada ? '1' : '0');
-        dados.append('foto', rascunho.foto);
+        rascunho.fotos.forEach(f => dados.append('fotos[]', f.file));
 
         btn.disabled = true;
         btn.classList.add('enviando');
@@ -654,9 +735,9 @@
                 const erro = await r.json().catch(() => ({}));
                 throw new Error(erro.message || 'falha ao enviar');
             }
-            const { data: novo } = await r.json();
-            meus.add(novo.id);
-            armazenar('serra-alerta:meus', [...meus]);
+            const { data: novo, token } = await r.json();
+            meus.set(novo.id, token);
+            salvarMeus();
             relatos.unshift(novo);
             if (!filtro.categorias.has(novo.categoria) || !filtro.relatos) { filtro = filtroPadrao(); }
             desenharMapa();
@@ -715,7 +796,7 @@
     mostrar();
     desenharMapa();
     carregarRelatos();
-    carregarFocos();
+    if (prefs.atualizarFocos) carregarFocos();
     setInterval(carregarRelatos, 20000);
     setInterval(desenharStatusFocos, 60000);
 })();

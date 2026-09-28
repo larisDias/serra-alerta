@@ -6,6 +6,9 @@ on:
     paths:
       - 'landing/**'
       - '.github/workflows/pages.yml'
+  # Atualiza o snapshot dos focos de calor do INPE (uma consulta só, o build continua rápido).
+  schedule:
+    - cron: '7 * * * *'
   workflow_dispatch:
 
 permissions:

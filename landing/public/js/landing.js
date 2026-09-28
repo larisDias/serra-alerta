@@ -225,6 +225,8 @@
 
     carregar();
     carregarFocos();
+    // Versão estática: o dado ao vivo do INPE chega depois do snapshot.
+    window.addEventListener('serra-alerta:focos', carregarFocos);
     setInterval(carregar, 20000);
     // A demonstração embutida avisa quando um relato é enviado.
     window.addEventListener('message', (e) => {

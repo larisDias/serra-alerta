@@ -45,17 +45,22 @@
     };
 
     /*
-     * Focos de calor: uma única consulta ao INPE traz os últimos 30 dias só da região da Serra (poucos KB),
-     * é guardada 15 min no localStorage e reaproveitada por todas as chamadas e abas; ?dias= filtra localmente.
-     * Assim cada visitante faz no máximo 4 consultas por hora e nada é baixado em duplicidade.
-     * Se o INPE falhar, usa o último resultado guardado, mesmo vencido.
+     * Focos de calor, em duas camadas:
+     *  1. snapshot (api/focos.json): gerado de hora em hora pelo GitHub Actions e servido pelo próprio Pages;
+     *     responde na hora e é o que o mapa desenha primeiro (ou o único, se o INPE estiver fora).
+     *  2. ao vivo: uma única consulta ao WFS do INPE (CORS liberado) traz os últimos 30 dias só da região da Serra
+     *     (poucos KB). O resultado fica 15 min no localStorage, compartilhado entre abas, e ao chegar avisa a
+     *     página (evento `serra-alerta:focos`) para redesenhar. ?dias= filtra localmente.
+     * Cada visitante faz no máximo 4 consultas por hora ao INPE; após uma falha espera 60 s antes de tentar de novo.
      */
     const WFS = 'https://terrabrasilis.dpi.inpe.br/queimadas/geoserver/wfs';
     const CHAVE_FOCOS = 'serra-alerta:estatico:focos';
+    const EVENTO_FOCOS = 'serra-alerta:focos';
     const VALIDADE_FOCOS = 15 * 60 * 1000;
     const PAUSA_APOS_FALHA = 60 * 1000;
     const REGIAO = { minLon: -47.4, minLat: -22.2, maxLon: -46.7, maxLat: -21.5 }; // mesmo recorte do app
     let consulta = null;
+    let snapshot = null;
     let falhouEm = 0;
 
     // "ESPÍRITO SANTO DO PINHAL" → "Espírito Santo do Pinhal"
@@ -95,20 +100,32 @@
             .sort((a, b) => b.data_deteccao.localeCompare(a.data_deteccao));
     };
 
+    const lerSnapshot = () => snapshot ??= original(`${raiz}api/focos.json`)
+        .then(r => (r.ok ? r.json() : null))
+        .then(j => (j && j.disponivel ? { em: Date.parse(j.atualizado_em), data: j.data } : null))
+        .catch(() => null);
+
+    const consultarAoVivo = () => {
+        if (consulta || Date.now() - falhouEm < PAUSA_APOS_FALHA) return consulta;
+        consulta = consultarInpe()
+            .then((data) => {
+                const novo = { em: Date.now(), data };
+                try { localStorage.setItem(CHAVE_FOCOS, JSON.stringify(novo)); } catch { /* sem espaço: segue sem cache */ }
+                window.dispatchEvent(new Event(EVENTO_FOCOS));
+                return novo;
+            })
+            .catch(() => { falhouEm = Date.now(); return null; })
+            .finally(() => { consulta = null; });
+        return consulta;
+    };
+
     const focosBase = async () => {
         const guardado = lerFocos();
         if (guardado && Date.now() - guardado.em < VALIDADE_FOCOS) return guardado;
-        if (!consulta && Date.now() - falhouEm > PAUSA_APOS_FALHA) {
-            consulta = consultarInpe()
-                .then((data) => {
-                    const novo = { em: Date.now(), data };
-                    try { localStorage.setItem(CHAVE_FOCOS, JSON.stringify(novo)); } catch { /* sem espaço: segue sem cache */ }
-                    return novo;
-                })
-                .catch(() => { falhouEm = Date.now(); return guardado; })
-                .finally(() => { consulta = null; });
-        }
-        return consulta ? consulta : guardado;
+        const aoVivo = consultarAoVivo();
+        // Responde já com o dado mais novo que houver (cache vencido ou snapshot); o ao vivo chega depois pelo evento.
+        const antigo = [guardado, await lerSnapshot()].filter(Boolean).sort((a, b) => b.em - a.em)[0];
+        return antigo || (await aoVivo);
     };
 
     const focos = async (url) => {

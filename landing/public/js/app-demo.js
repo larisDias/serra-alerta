@@ -279,7 +279,7 @@
             if (!r.ok || !json.disponivel) throw new Error();
             focos = json.data;
             diasCarregados = dias;
-            focosAtualizados = Date.now();
+            focosAtualizados = json.atualizado_em ? Date.parse(json.atualizado_em) : Date.now();
             estadoFocos = 'ocioso';
         } catch {
             estadoFocos = 'falhou';
@@ -287,6 +287,9 @@
         desenharMapa();
     };
     $('#statusFocos').onclick = () => carregarFocos();
+    // Versão estática: o estatico.js avisa quando o dado ao vivo do INPE chega depois do snapshot.
+    const aoChegarFocosAoVivo = () => (estadoFocos === 'carregando' ? setTimeout(aoChegarFocosAoVivo, 300) : carregarFocos());
+    window.addEventListener('serra-alerta:focos', aoChegarFocosAoVivo);
 
     /* ---------- Navegação ---------- */
     const ABAS = ['mapa', 'relatos', 'prevencao', 'emergencia'];

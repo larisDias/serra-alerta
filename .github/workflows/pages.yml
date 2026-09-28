@@ -1,0 +1,73 @@
+name: Publicar site (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'landing/**'
+      - '.github/workflows/pages.yml'
+  # Atualiza os focos de calor do INPE, que são coletados na hora do build.
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: landing
+    env:
+      APP_ENV: production
+      APP_DEBUG: 'false'
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ${{ github.workspace }}/landing/database/database.sqlite
+      SESSION_DRIVER: array
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: pages
+        uses: actions/configure-pages@v6
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite
+          coverage: none
+
+      - run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Preparar o app (chave, banco com relatos de exemplo)
+        run: |
+          echo "APP_URL=${{ steps.pages.outputs.base_url }}" >> "$GITHUB_ENV"
+          echo "APP_KEY=base64:$(head -c 32 /dev/urandom | base64)" >> "$GITHUB_ENV"
+          touch database/database.sqlite
+
+      - run: php artisan migrate --seed --force
+
+      - run: php artisan site:exportar dist
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: landing/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v5

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Http;
 
 /**
  * Focos de calor oficiais (INPE/BDQueimadas), somente leitura, no mesmo recorte do app Android.
- * Os CSVs diários do INPE não permitem CORS, então o site busca, filtra e guarda em cache.
+ * O site busca os CSVs diários do INPE (Brasil inteiro, ~3,5 MB cada), filtra e guarda em cache, em vez de cada visitante baixá-los.
  */
 class FocoController extends Controller
 {

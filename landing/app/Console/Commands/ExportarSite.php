@@ -11,8 +11,8 @@ use RuntimeException;
 
 /**
  * Gera uma cópia estática do site para o GitHub Pages, que não executa PHP.
- * As páginas e os dois JSONs da API são renderizados pelas próprias rotas; o resto é copiado de public/.
- * No navegador, public/js/estatico.js simula a API em cima desses JSONs.
+ * As páginas e o JSON dos relatos de exemplo são renderizados pelas próprias rotas; o resto é copiado de public/.
+ * No navegador, public/js/estatico.js simula a API em cima desse JSON e lê os focos do INPE ao vivo.
  */
 class ExportarSite extends Command
 {
@@ -26,7 +26,6 @@ class ExportarSite extends Command
         '/app' => 'app/index.html',
         '/app?embed=1' => 'app/embed.html',
         '/api/relatos' => 'api/relatos.json',
-        '/api/focos?dias=30' => 'api/focos.json',
     ];
 
     public function handle(Filesystem $fs): int
@@ -53,10 +52,7 @@ class ExportarSite extends Command
             $this->line("  $uri → $arquivo");
         }
 
-        $focos = json_decode($fs->get("$destino/api/focos.json"), true);
-        $this->info(($focos['disponivel'] ?? false)
-            ? "Site exportado em $destino ({$focos['total']} focos do INPE)."
-            : "Site exportado em $destino, mas os focos do INPE estavam indisponíveis.");
+        $this->info("Site exportado em $destino.");
 
         return self::SUCCESS;
     }

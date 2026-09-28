@@ -1,7 +1,7 @@
 /*
  * Modo estático (GitHub Pages): sem servidor PHP, a API do site é simulada no navegador.
  *   GET    /api/relatos      → relatos de exemplo (api/relatos.json, gerado no build) + os enviados neste navegador
- *   GET    /api/focos        → focos do INPE coletados no build (api/focos.json), filtrados por ?dias=
+ *   GET    /api/focos        → focos do INPE lidos ao vivo do WFS público do INPE (CORS liberado), filtrados por ?dias=
  *   POST   /api/relatos      → guarda o relato (com as fotos reduzidas) no localStorage deste navegador
  *   DELETE /api/relatos/{id} → remove-o de lá
  * Precisa ser carregado antes de landing.js / app-demo.js, que continuam chamando fetch() normalmente.
@@ -44,14 +44,86 @@
         return resposta({ data, total: data.length });
     };
 
+    /*
+     * Focos de calor: uma única consulta ao INPE traz os últimos 30 dias só da região da Serra (poucos KB),
+     * é guardada 15 min no localStorage e reaproveitada por todas as chamadas e abas; ?dias= filtra localmente.
+     * Assim cada visitante faz no máximo 4 consultas por hora e nada é baixado em duplicidade.
+     * Se o INPE falhar, usa o último resultado guardado, mesmo vencido.
+     */
+    const WFS = 'https://terrabrasilis.dpi.inpe.br/queimadas/geoserver/wfs';
+    const CHAVE_FOCOS = 'serra-alerta:estatico:focos';
+    const VALIDADE_FOCOS = 15 * 60 * 1000;
+    const PAUSA_APOS_FALHA = 60 * 1000;
+    const REGIAO = { minLon: -47.4, minLat: -22.2, maxLon: -46.7, maxLat: -21.5 }; // mesmo recorte do app
+    let consulta = null;
+    let falhouEm = 0;
+
+    // "ESPÍRITO SANTO DO PINHAL" → "Espírito Santo do Pinhal"
+    const nomeProprio = (s = '') => s.toLowerCase()
+        .replace(/(^|\s)(\S)/g, (_, a, b) => a + b.toUpperCase())
+        .replace(/\s(Da|Das|De|Do|Dos|E)(?=\s)/g, (m) => m.toLowerCase());
+
+    const lerFocos = () => {
+        try { return JSON.parse(localStorage.getItem(CHAVE_FOCOS)); } catch { return null; }
+    };
+
+    const consultarInpe = async () => {
+        const desde = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10) + 'T00:00:00Z';
+        const { minLon, minLat, maxLon, maxLat } = REGIAO;
+        const params = new URLSearchParams({
+            service: 'WFS',
+            version: '1.0.0',
+            request: 'GetFeature',
+            typeName: 'bdqueimadas2:focos',
+            outputFormat: 'application/json',
+            propertyName: 'id_foco_bdq,latitude,longitude,data_hora_gmt,satelite,municipio,frp',
+            CQL_FILTER: `BBOX(geometria,${minLon},${minLat},${maxLon},${maxLat}) AND data_hora_gmt >= '${desde}'`,
+        });
+        const r = await original(`${WFS}?${params}`);
+        if (!r.ok) throw new Error(`INPE respondeu ${r.status}`);
+        const { features } = await r.json();
+        return features
+            .map(({ properties: p }) => ({
+                id: String(p.id_foco_bdq),
+                latitude: p.latitude,
+                longitude: p.longitude,
+                data_deteccao: p.data_hora_gmt,
+                frp: p.frp ?? null,
+                satelite: p.satelite ?? '',
+                municipio: nomeProprio(p.municipio),
+            }))
+            .sort((a, b) => b.data_deteccao.localeCompare(a.data_deteccao));
+    };
+
+    const focosBase = async () => {
+        const guardado = lerFocos();
+        if (guardado && Date.now() - guardado.em < VALIDADE_FOCOS) return guardado;
+        if (!consulta && Date.now() - falhouEm > PAUSA_APOS_FALHA) {
+            consulta = consultarInpe()
+                .then((data) => {
+                    const novo = { em: Date.now(), data };
+                    try { localStorage.setItem(CHAVE_FOCOS, JSON.stringify(novo)); } catch { /* sem espaço: segue sem cache */ }
+                    return novo;
+                })
+                .catch(() => { falhouEm = Date.now(); return guardado; })
+                .finally(() => { consulta = null; });
+        }
+        return consulta ? consulta : guardado;
+    };
+
     const focos = async (url) => {
-        const r = await original(`${raiz}api/focos.json`);
-        if (!r.ok) return resposta({ data: [], total: 0, disponivel: false }, 503);
-        const base = await r.json();
+        const base = await focosBase();
+        if (!base) return resposta({ data: [], total: 0, disponivel: false }, 503);
         const dias = Math.min(30, Math.max(1, Number(url.searchParams.get('dias')) || 7));
         const desde = Date.now() - dias * 864e5;
         const data = base.data.filter(f => new Date(f.data_deteccao).getTime() >= desde);
-        return resposta({ ...base, data, total: data.length });
+        return resposta({
+            data,
+            total: data.length,
+            fonte: 'INPE/BDQueimadas',
+            disponivel: true,
+            atualizado_em: new Date(base.em).toISOString(),
+        });
     };
 
     const criar = async (dados) => {

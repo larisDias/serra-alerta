@@ -6,14 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Relato extends Model
 {
-    public const TIPOS = ['controlada', 'irregular', 'incendio'];
-    public const SINAIS = ['fumaca', 'fogo'];
+    /** Mesmas categorias do app Android (CategoriaOcorrencia.valor). */
+    public const CATEGORIAS = ['queima_controlada', 'queimada_irregular', 'incendio_florestal', 'fumaca_nao_identificada'];
 
-    protected $fillable = ['tipo', 'sinal', 'latitude', 'longitude', 'descricao', 'foto'];
+    protected $fillable = ['categoria', 'latitude', 'longitude', 'descricao', 'foto', 'ajustada_manualmente'];
 
     protected $casts = [
         'latitude' => 'float',
         'longitude' => 'float',
+        'ajustada_manualmente' => 'boolean',
     ];
 
     protected $appends = ['foto_url'];

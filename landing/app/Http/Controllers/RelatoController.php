@@ -17,7 +17,7 @@ class RelatoController extends Controller
     public function index(Request $request): JsonResponse
     {
         $relatos = Relato::query()
-            ->when($request->query('tipo'), fn ($q, $tipo) => $q->where('tipo', $tipo))
+            ->when($request->query('categoria'), fn ($q, $categoria) => $q->where('categoria', $categoria))
             ->latest()
             ->limit(500)
             ->get();
@@ -28,28 +28,27 @@ class RelatoController extends Controller
     public function store(Request $request): JsonResponse
     {
         $dados = $request->validate([
-            'tipo' => ['required', Rule::in(Relato::TIPOS)],
-            'sinal' => ['required', Rule::in(Relato::SINAIS)],
+            'categoria' => ['required', Rule::in(Relato::CATEGORIAS)],
             // Recorte aproximado da região de São João da Boa Vista.
             'latitude' => ['required', 'numeric', 'between:-22.6,-21.4'],
             'longitude' => ['required', 'numeric', 'between:-47.3,-46.3'],
             'descricao' => ['nullable', 'string', 'max:280'],
-            'foto' => ['nullable', 'image', 'max:6144'],
+            'ajustada_manualmente' => ['sometimes', 'boolean'],
+            // Como no app, a foto é obrigatória.
+            'foto' => ['required', 'image', 'max:6144'],
         ], [
-            'tipo.*' => 'Escolha o tipo de ocorrência.',
-            'sinal.*' => 'Informe se é fumaça ou fogo.',
+            'categoria.*' => 'Escolha o que você está vendo.',
             'latitude.*' => 'Local fora da área de cobertura do protótipo.',
             'longitude.*' => 'Local fora da área de cobertura do protótipo.',
             'descricao.max' => 'A descrição deve ter no máximo 280 caracteres.',
+            'foto.required' => 'Tire ou escolha uma foto da ocorrência.',
             'foto.*' => 'A foto deve ser uma imagem de até 6 MB.',
         ]);
 
-        if ($request->hasFile('foto')) {
-            $arquivo = $request->file('foto');
-            $nome = now()->format('Ymd_His') . '_' . Str::random(6) . '.' . $arquivo->extension();
-            $arquivo->move(public_path('uploads'), $nome);
-            $dados['foto'] = $nome;
-        }
+        $arquivo = $request->file('foto');
+        $nome = now()->format('Ymd_His') . '_' . Str::random(6) . '.' . $arquivo->extension();
+        $arquivo->move(public_path('uploads'), $nome);
+        $dados['foto'] = $nome;
 
         return response()->json(['data' => Relato::create($dados)], 201);
     }

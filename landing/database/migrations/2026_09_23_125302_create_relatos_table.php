@@ -10,12 +10,13 @@ return new class extends Migration
     {
         Schema::create('relatos', function (Blueprint $table) {
             $table->id();
-            $table->string('tipo', 20);   // controlada | irregular | incendio
-            $table->string('sinal', 10);  // fumaca | fogo
+            // queima_controlada | queimada_irregular | incendio_florestal | fumaca_nao_identificada
+            $table->string('categoria', 30);
             $table->decimal('latitude', 9, 6);
             $table->decimal('longitude', 9, 6);
             $table->string('descricao', 280)->nullable();
             $table->string('foto')->nullable();
+            $table->boolean('ajustada_manualmente')->default(false);
             $table->timestamps();
         });
     }

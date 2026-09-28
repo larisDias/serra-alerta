@@ -22,6 +22,9 @@
         'info' => '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
         'wind' => '<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>',
         'menu' => '<path d="M4 6h16M4 12h16M4 18h16"/>',
+        'cloudoff' => '<path d="m2 2 20 20"/><path d="M5.78 5.78A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.31-.19"/><path d="M21.53 16.5A4.5 4.5 0 0 0 17.5 10h-1.79A7 7 0 0 0 10 5.07"/>',
+        'share' => '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/>',
+        'code' => '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>',
         'book' => '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
     ];
     $ic = fn (string $nome, string $classe = 'ic') => '<svg class="'.$classe.'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$icones[$nome].'</svg>';
@@ -34,8 +37,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Serra Alerta — monitoramento colaborativo de queimadas</title>
     <meta name="description" content="Aplicativo colaborativo para reportar focos de fumaça e fogo em São João da Boa Vista e na Serra da Paulista. Projeto de extensão do IFSP.">
-    <meta name="theme-color" content="#171412">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23D9482B'/%3E%3Cpath fill='white' d='M16 5s8 6 8 13a8 8 0 0 1-16 0c0-4 2-6 4-8 0 3 2 5 4 5-1-4 0-7 0-10z'/%3E%3C/svg%3E">
+    <meta name="theme-color" content="#161311">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23161311'/%3E%3Cpath fill='%23FF7A45' d='M16 5s8 6 8 13a8 8 0 0 1-16 0c0-4 2-6 4-8 0 3 2 5 4 5-1-4 0-7 0-10z'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -75,16 +78,18 @@
             <h1>Viu fumaça na Serra?<br><em>Avise em segundos.</em></h1>
             <p class="hero__lead">
                 O <strong>Serra Alerta</strong> transforma moradores, produtores rurais e ecoturistas numa rede de
-                vigilância contra queimadas: foto, GPS automático e mapa em tempo real — <strong>sem cadastro</strong>.
+                vigilância contra queimadas: foto, GPS automático e um mapa que junta os relatos da comunidade aos
+                focos de calor do INPE — <strong>sem cadastro</strong> e funcionando até sem internet.
             </p>
             <div class="hero__acoes">
                 <a href="#como" class="btn btn--brasa">Ver como funciona {!! $ic('arrow') !!}</a>
                 <a href="#problema" class="btn btn--vidro">Entenda o problema</a>
             </div>
             <ul class="hero__pontos">
-                <li>{!! $ic('noaccount') !!} Sem conta</li>
+                <li>{!! $ic('camera') !!} Foto</li>
                 <li>{!! $ic('pin') !!} GPS automático</li>
-                <li>{!! $ic('camera') !!} Foto do foco</li>
+                <li>{!! $ic('noaccount') !!} Sem cadastro</li>
+                <li>{!! $ic('cloudoff') !!} Funciona offline</li>
             </ul>
         </div>
 
@@ -101,7 +106,7 @@
                 {!! $ic('clock') !!}
                 <div><strong>&lt; 30 s</strong><small>para reportar um foco</small></div>
             </div>
-            <p class="hero__dica">Protótipo interativo — toque em “Reportar foco”</p>
+            <p class="hero__dica">Protótipo interativo — toque na câmera para registrar</p>
         </div>
     </div>
 </section>
@@ -221,26 +226,26 @@
     <div class="container">
         <div class="cabeca cabeca--centro revelar">
             <span class="rotulo">Como funciona</span>
-            <h2>Três toques entre ver a fumaça e colocar o foco no mapa.</h2>
+            <h2>Três passos entre ver a fumaça e colocar o foco no mapa.</h2>
         </div>
         <div class="passos">
             <article class="passo revelar">
                 <span class="passo__num">1</span>
-                <div class="passo__icone">{!! $ic('flame') !!}</div>
-                <h3>Toque em “Reportar foco”</h3>
-                <p>Sem login, sem cadastro. Escolha se é fumaça ou fogo e o tipo provável: queimada controlada, irregular ou incêndio florestal.</p>
+                <div class="passo__icone">{!! $ic('camera') !!}</div>
+                <h3>Toque na câmera e fotografe</h3>
+                <p>Sem login, sem cadastro. O registro começa pela foto do que você está vendo — até 3 fotos por ocorrência.</p>
             </article>
             <article class="passo revelar">
                 <span class="passo__num">2</span>
-                <div class="passo__icone">{!! $ic('camera') !!}</div>
-                <h3>Foto e localização automáticas</h3>
-                <p>O GPS do celular captura as coordenadas. Se o foco estiver longe, arraste o mapa e marque o ponto exato.</p>
+                <div class="passo__icone">{!! $ic('pin') !!}</div>
+                <h3>Diga o que vê e onde</h3>
+                <p>Queima controlada, queimada irregular, incêndio florestal ou fumaça não identificada. O GPS marca o local; se o foco estiver longe, ajuste o pino no mapa.</p>
             </article>
             <article class="passo revelar">
                 <span class="passo__num">3</span>
                 <div class="passo__icone">{!! $ic('map') !!}</div>
-                <h3>O alerta aparece no mapa</h3>
-                <p>O relato entra no mapa público e ajuda Defesa Civil e Bombeiros a validar a ocorrência e agir com rapidez.</p>
+                <h3>Alerta no mapa e compartilhado</h3>
+                <p>O relato fica salvo no aparelho, aparece no mapa ao lado dos focos do INPE e pode ser enviado na hora à Defesa Civil ou à brigada.</p>
             </article>
         </div>
         <div class="aviso revelar">
@@ -260,39 +265,41 @@
         <div class="recursos">
             <article class="recurso recurso--destaque revelar">
                 <div class="recurso__icone">{!! $ic('map') !!}</div>
-                <h3>Mapa de focos em tempo real</h3>
-                <p>Tela principal com mapa OpenStreetMap e marcadores coloridos por tipo. Toque em um foco para ver descrição, foto, horário e coordenadas.</p>
-                <div class="legenda-tipos">
-                    <span><i class="ponto ponto--controlada"></i>Controlada</span>
-                    <span><i class="ponto ponto--irregular"></i>Irregular</span>
-                    <span><i class="ponto ponto--incendio"></i>Incêndio</span>
+                <h3>Relatos e satélite no mesmo mapa</h3>
+                <p>Mapa OpenStreetMap com os relatos da comunidade — a cor da chama indica a categoria — e os focos de calor oficiais do INPE, com intensidade pela potência radiativa do fogo (FRP). Filtre por período (24 h, 7 ou 30 dias, datas) e categoria.</p>
+                <div class="legenda-tipos legenda-tipos--grade">
+                    <span><i class="ponto ponto--controlada"></i>Queima controlada</span>
+                    <span><i class="ponto ponto--irregular"></i>Queimada irregular</span>
+                    <span><i class="ponto ponto--incendio"></i>Incêndio florestal</span>
+                    <span><i class="ponto ponto--fumaca"></i>Fumaça não identificada</span>
+                    <span><i class="ponto ponto--inpe"></i>Foco de calor · INPE / BDQueimadas</span>
                 </div>
             </article>
             <article class="recurso revelar">
                 <div class="recurso__icone">{!! $ic('noaccount') !!}</div>
-                <h3>Denúncia expressa sem conta</h3>
-                <p>Nenhuma barreira de cadastro ou autenticação. Qualquer pessoa pode reportar em poucos segundos.</p>
+                <h3>Registro sem conta</h3>
+                <p>Nenhuma barreira de cadastro ou autenticação, e nenhum dado pessoal coletado. Qualquer pessoa registra em poucos segundos.</p>
             </article>
             <article class="recurso revelar">
                 <div class="recurso__icone">{!! $ic('pin') !!}</div>
-                <h3>Geolocalização automática</h3>
-                <p>Coordenadas obtidas pelo GPS do aparelho no momento do registro, com opção de marcar manualmente no mapa.</p>
+                <h3>Localização precisa</h3>
+                <p>GPS consultado só no momento do registro, com a precisão em metros e ajuste manual do pino quando o foco está longe de você.</p>
             </article>
             <article class="recurso revelar">
                 <div class="recurso__icone">{!! $ic('camera') !!}</div>
-                <h3>Foto e descrição sumária</h3>
-                <p>Integração com a câmera ou galeria e um campo curto de texto para detalhes como direção do vento.</p>
+                <h3>Até 3 fotos e descrição</h3>
+                <p>Câmera integrada ao app e um campo curto de texto para detalhes como a direção do vento.</p>
             </article>
             <article class="recurso revelar">
-                <div class="recurso__icone">{!! $ic('target') !!}</div>
-                <h3>Mapeamento das áreas de ocorrência</h3>
-                <p>Os relatos são agrupados em núcleos, revelando as regiões com maior repetição de queimadas ao longo do tempo.</p>
+                <div class="recurso__icone">{!! $ic('cloudoff') !!}</div>
+                <h3>Funciona sem internet</h3>
+                <p>O relato é salvo no aparelho antes da confirmação e pode ser compartilhado depois. Os focos do INPE ficam em cache para consulta offline.</p>
             </article>
             <article class="recurso recurso--faixa revelar">
                 <div class="recurso__icone">{!! $ic('call') !!}</div>
                 <div>
-                    <h3>Atalhos de emergência</h3>
-                    <p>Ligação direta para Bombeiros (193) e Defesa Civil (199) a partir de qualquer relato. O app complementa, e nunca substitui, o acionamento oficial.</p>
+                    <h3>Prevenção e emergência a um toque</h3>
+                    <p>Abas de prevenção, com boas práticas e a Lei nº 14.944/2024, e de emergência, com ligação direta para Bombeiros (193), Defesa Civil (199) e Polícia Militar (190). O app complementa, e nunca substitui, o acionamento oficial.</p>
                 </div>
             </article>
         </div>
@@ -306,22 +313,25 @@
             <div>
                 <span class="rotulo">Mapa colaborativo</span>
                 <h2>Os relatos da comunidade, ao vivo.</h2>
-                <p>Este mapa lê a mesma base usada pelo app. Envie um relato pelo celular ao lado, no topo da página, e veja-o aparecer aqui.</p>
+                <p>Este mapa lê a mesma base da demonstração do app, junto aos focos de calor do INPE dos últimos 7 dias. Envie um relato pelo celular no topo da página e veja-o aparecer aqui.</p>
             </div>
-            <div class="filtros" id="filtrosMapa" role="group" aria-label="Filtrar por tipo">
-                <button class="filtro ativo" data-tipo="">Todos <b data-cont="">{{ $totalRelatos }}</b></button>
-                <button class="filtro" data-tipo="controlada"><i class="ponto ponto--controlada"></i>Controlada <b data-cont="controlada">–</b></button>
-                <button class="filtro" data-tipo="irregular"><i class="ponto ponto--irregular"></i>Irregular <b data-cont="irregular">–</b></button>
-                <button class="filtro" data-tipo="incendio"><i class="ponto ponto--incendio"></i>Incêndio <b data-cont="incendio">–</b></button>
+            <div class="filtros" id="filtrosMapa" role="group" aria-label="Filtrar por categoria">
+                <button class="filtro ativo" data-categoria="">Todos <b data-cont="">{{ $totalRelatos }}</b></button>
+                <button class="filtro" data-categoria="queima_controlada"><i class="ponto ponto--controlada"></i>Controlada <b data-cont="queima_controlada">–</b></button>
+                <button class="filtro" data-categoria="queimada_irregular"><i class="ponto ponto--irregular"></i>Irregular <b data-cont="queimada_irregular">–</b></button>
+                <button class="filtro" data-categoria="incendio_florestal"><i class="ponto ponto--incendio"></i>Incêndio <b data-cont="incendio_florestal">–</b></button>
+                <button class="filtro" data-categoria="fumaca_nao_identificada"><i class="ponto ponto--fumaca"></i>Fumaça <b data-cont="fumaca_nao_identificada">–</b></button>
+                <button class="filtro filtro--inpe ativo" id="filtroInpe" aria-pressed="true">{!! $ic('satellite') !!}Focos INPE <b id="contFocos">–</b></button>
             </div>
         </div>
         <div class="mapa-moldura revelar">
-            <div id="mapaPublico" class="mapa" data-api="{{ route('api.relatos.index') }}"></div>
+            <div id="mapaPublico" class="mapa" data-api="{{ route('api.relatos.index') }}" data-focos="{{ route('api.focos') }}"></div>
             <aside class="mapa-lista">
                 <h3>Relatos recentes</h3>
                 <ul id="listaRelatos"><li class="vazio">Carregando…</li></ul>
             </aside>
         </div>
+        <p class="mapa-status" id="statusFocos"><i></i><span>Carregando focos de calor do INPE…</span></p>
     </div>
 </section>
 
@@ -393,13 +403,13 @@
             </article>
             <article class="dica revelar">
                 {!! $ic('leaf') !!}
-                <h3>Prefira alternativas ao fogo</h3>
-                <p>Compostagem, roçada e incorporação da palhada substituem a queima no manejo agrícola.</p>
+                <h3>Mantenha aceiros limpos</h3>
+                <p>Faixas sem vegetação ao redor de casas, cercas e plantações freiam o avanço do fogo. Queima controlada só com autorização do órgão ambiental.</p>
             </article>
             <article class="dica revelar">
                 {!! $ic('sun') !!}
                 <h3>Cuidado redobrado na estiagem</h3>
-                <p>De julho a outubro a umidade despenca. Mantenha aceiros e nunca deixe fogo sem vigilância.</p>
+                <p>De julho a outubro a umidade despenca. Não descarte bitucas em estradas e não solte balões.</p>
             </article>
             <article class="dica revelar">
                 {!! $ic('shield') !!}
@@ -414,6 +424,7 @@
             </div>
             <a href="tel:193" class="tel"><span>193</span>Corpo de Bombeiros</a>
             <a href="tel:199" class="tel"><span>199</span>Defesa Civil</a>
+            <a href="tel:190" class="tel"><span>190</span>Polícia Militar</a>
         </div>
     </div>
 </section>
@@ -425,30 +436,36 @@
             <span class="rotulo rotulo--claro">Tecnologia</span>
             <h2>Protótipo nativo, de custo zero, pronto para crescer.</h2>
             <p>
-                O app é desenvolvido em <strong>Kotlin</strong> com interface em <strong>Jetpack Compose</strong>. Nesta etapa
-                os dados ficam no próprio aparelho (SQLite via Room), validando o fluxo completo sem custos de
-                infraestrutura. A arquitetura já prevê a migração para uma API REST e um banco geográfico centralizado,
-                como a demonstração em Laravel deste site.
+                O app é desenvolvido em <strong>Kotlin</strong> com interface em <strong>Jetpack Compose</strong> (Material 3),
+                em arquitetura MVVM com camadas de interface, domínio e dados. Os relatos e as fotos ficam no próprio
+                aparelho (SQLite via Room), o que faz o registro funcionar offline e sem custos de infraestrutura; os focos
+                de calor do INPE são consultados em fonte pública e guardados em cache. A arquitetura já prevê a migração
+                para uma API REST e um banco geográfico centralizado, como a demonstração em Laravel deste site.
             </p>
             <div class="stack">
-                @foreach (['Kotlin', 'Jetpack Compose', 'OSMdroid · OpenStreetMap', 'FusedLocationProvider', 'Room · SQLite', 'Laravel · API REST', 'Leaflet'] as $t)
+                @foreach (['Kotlin', 'Jetpack Compose · Material 3', 'MVVM', 'OSMdroid · OpenStreetMap', 'Fused Location Provider', 'CameraX', 'Room · SQLite', 'INPE · BDQueimadas', 'Laravel · API REST', 'Leaflet'] as $t)
                     <span>{{ $t }}</span>
                 @endforeach
             </div>
+            <a class="link-codigo" href="{{ $repositorio }}/tree/main/app-android" target="_blank" rel="noopener">{!! $ic('code') !!} Ver o código do app no GitHub</a>
         </div>
         <div class="arquitetura revelar" aria-label="Arquitetura do sistema">
             <div class="arq arq--app">
                 {!! $ic('phone') !!}
-                <div><strong>App Android</strong><small>Kotlin + Compose · mapa, câmera, GPS</small></div>
+                <div><strong>App Android</strong><small>Kotlin + Compose · mapa, câmera, GPS, compartilhamento</small></div>
             </div>
             <div class="arq__seta"><span>hoje</span></div>
             <div class="arq">
                 {!! $ic('database') !!}
-                <div><strong>Banco local</strong><small>Room / SQLite no aparelho</small></div>
+                <div><strong>Banco local</strong><small>Room / SQLite · relatos, fotos e cache de focos</small></div>
+            </div>
+            <div class="arq arq--inpe">
+                {!! $ic('satellite') !!}
+                <div><strong>INPE · BDQueimadas</strong><small>focos de calor oficiais, somente leitura</small></div>
             </div>
             <div class="arq__seta arq__seta--futuro"><span>próxima etapa</span></div>
             <div class="arq arq--futuro">
-                {!! $ic('satellite') !!}
+                {!! $ic('share') !!}
                 <div><strong>API REST + banco geográfico</strong><small>visão colaborativa entre usuários, painel para a Defesa Civil</small></div>
             </div>
         </div>
@@ -486,6 +503,7 @@
         <h2>A Serra da Paulista precisa de mais olhos.</h2>
         <p>Cada relato encurta o caminho entre a primeira fumaça e a primeira equipe em campo.</p>
         <a href="{{ route('app.demo') }}" class="btn btn--brasa" target="_blank">Experimentar o protótipo {!! $ic('arrow') !!}</a>
+        <a href="{{ $repositorio }}" class="btn btn--vidro" target="_blank" rel="noopener">{!! $ic('code') !!} Código no GitHub</a>
     </div>
 </section>
 
@@ -497,6 +515,11 @@
                 <span>Serra Alerta</span>
             </a>
             <p>Projetos de Extensão — Documento-síntese, edição 2026/2. Instituto Federal de Educação, Ciência e Tecnologia de São Paulo, Câmpus São João da Boa Vista.</p>
+            <div class="rodape__links">
+                <a href="{{ route('app.demo') }}" target="_blank">Demonstração do app</a>
+                <a href="{{ $repositorio }}/tree/main/app-android" target="_blank" rel="noopener">Código do app Android</a>
+                <a href="https://terrabrasilis.dpi.inpe.br/queimadas/portal/" target="_blank" rel="noopener">Portal BDQueimadas (INPE)</a>
+            </div>
         </div>
         <div>
             <h4>Referências</h4>
@@ -512,7 +535,7 @@
     </div>
     <div class="container rodape__base">
         <span>© {{ date('Y') }} Equipe Serra Alerta · IFSP</span>
-        <span>Mapas © OpenStreetMap contributors</span>
+        <span>Mapas © OpenStreetMap contributors · Focos de calor: INPE/BDQueimadas</span>
     </div>
 </footer>
 

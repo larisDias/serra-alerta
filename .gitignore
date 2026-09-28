@@ -2,3 +2,8 @@
 Thumbs.db
 .vscode/
 .idea/
+
+# Cópias locais do projeto do app (o código já está em app-android/)
+/SerraAlerta/
+/SerraAlerta.rar
+/SerraAlerta.zip

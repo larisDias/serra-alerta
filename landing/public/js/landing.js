@@ -1,12 +1,18 @@
 (() => {
     'use strict';
 
-    const TIPOS = {
-        controlada: { rotulo: 'Queimada controlada', cor: '#E8A33D' },
-        irregular: { rotulo: 'Queimada irregular', cor: '#E4572E' },
-        incendio: { rotulo: 'Incêndio florestal', cor: '#A61E1E' },
+    // Mesmas categorias e cores do app Android (ui/theme/Color.kt).
+    const CATEGORIAS = {
+        queima_controlada: { rotulo: 'Queima controlada', cor: '#A16207' },
+        queimada_irregular: { rotulo: 'Queimada irregular', cor: '#C2410C' },
+        incendio_florestal: { rotulo: 'Incêndio florestal', cor: '#991B1B' },
+        fumaca_nao_identificada: { rotulo: 'Fumaça não identificada', cor: '#57534E' },
     };
-    const SINAIS = { fumaca: 'Fumaça', fogo: 'Fogo' };
+    const nivelFoco = (frp) => (frp == null || frp < 0 ? { rotulo: 'não informada', cor: '#78716C' }
+        : frp < 10 ? { rotulo: 'baixa', cor: '#EAB308' }
+            : frp < 50 ? { rotulo: 'moderada', cor: '#F97316' }
+                : frp < 100 ? { rotulo: 'alta', cor: '#DC2626' }
+                    : { rotulo: 'extrema', cor: '#7F1D1D' });
 
     /* ---------- Navegação ---------- */
     const nav = document.getElementById('nav');
@@ -67,7 +73,7 @@
     const el = document.getElementById('mapaPublico');
     if (!el || typeof L === 'undefined') return;
 
-    const mapa = L.map(el, { scrollWheelZoom: false, zoomControl: true }).setView([-21.965, -46.80], 12);
+    const mapa = L.map(el, { scrollWheelZoom: false, zoomControl: true, zoomSnap: 0.5 }).setView([-22.0, -46.84], 11);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -79,10 +85,13 @@
         radius: 2600, color: '#2F6B4F', weight: 1.5, dashArray: '6 6', fillColor: '#2F6B4F', fillOpacity: 0.08,
     }).addTo(mapa).bindTooltip('Serra da Paulista · área prioritária', { direction: 'top' });
 
+    const camadaFocos = L.layerGroup().addTo(mapa);
     const camada = L.layerGroup().addTo(mapa);
     const lista = document.getElementById('listaRelatos');
     let relatos = [];
+    let focos = [];
     let filtro = '';
+    let mostrarFocos = true;
     let idsConhecidos = null;
     const marcadores = new Map();
 
@@ -95,26 +104,47 @@
     };
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-    const icone = (r) => L.divIcon({
+    // Chama dos marcadores do app; focos do INPE levam o selo azul-petróleo.
+    const CHAMA = 'M12 2.5C12.9 5.8 17.6 8 17.6 13.6L17.6 14A5.6 5.6 0 0 1 6.4 14C6.4 11.2 7.8 9.3 9.3 8C9.5 9.9 10.4 11.1 11.6 11.7C11.1 8.4 11.1 5.3 12 2.5Z';
+    const NUCLEO = 'M12 12.2C12.5 13.9 14.7 14.9 14.7 16.9A2.7 2.7 0 0 1 9.3 16.9C9.3 15.6 10 14.8 10.7 14.3C10.9 15 11.3 15.4 11.8 15.6C11.6 14.5 11.6 13.3 12 12.2Z';
+    const chama = (cor, { selo = false, recente = false } = {}) => L.divIcon({
         className: '',
-        html: `<div class="marcador ${Date.now() - new Date(r.created_at) < 3600000 ? 'marcador--recente' : ''}" style="--cor:${TIPOS[r.tipo].cor}"><i></i><b></b></div>`,
-        iconSize: [26, 26],
-        iconAnchor: [13, 13],
-        popupAnchor: [0, -12],
+        html: `<svg class="chama ${recente ? 'chama--recente' : ''}" viewBox="0 0 24 24">
+            <path d="${CHAMA}" fill="${cor}" stroke="#fff" stroke-width="2.4" stroke-linejoin="round" paint-order="stroke"/>
+            <path d="${NUCLEO}" fill="#FFE7A3"/>
+            ${selo ? '<circle cx="18.24" cy="17.76" r="3.3" fill="#fff"/><circle cx="18.24" cy="17.76" r="2.1" fill="#1F5F73"/>' : ''}</svg>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 34 * 19.6 / 24],
+        popupAnchor: [0, -24],
     });
+    const icone = (r) => chama(CATEGORIAS[r.categoria].cor, { recente: Date.now() - new Date(r.created_at) < 3600000 });
 
     const popup = (r) => `
         <div class="popup">
-            <span class="popup__tipo"><i class="ponto" style="background:${TIPOS[r.tipo].cor}"></i>${TIPOS[r.tipo].rotulo}</span>
+            <span class="popup__tipo"><i class="ponto" style="background:${CATEGORIAS[r.categoria].cor}"></i>${CATEGORIAS[r.categoria].rotulo}</span>
             <div style="margin-top:6px">${esc(r.descricao) || '<em>Sem descrição</em>'}</div>
             ${r.foto_url ? `<img class="popup__img" src="${esc(r.foto_url)}" alt="Foto do relato">` : ''}
-            <small>${SINAIS[r.sinal]} · ${tempo(r.created_at)} · ${r.latitude.toFixed(4)}, ${r.longitude.toFixed(4)}</small>
+            <small>${tempo(r.created_at)} · ${r.latitude.toFixed(4)}, ${r.longitude.toFixed(4)}</small>
         </div>`;
+
+    const popupFoco = (f) => {
+        const n = nivelFoco(f.frp);
+        return `
+        <div class="popup">
+            <span class="popup__tipo popup__inpe"><i class="ponto" style="background:${n.cor}"></i>Foco de calor · INPE</span>
+            <div style="margin-top:6px">Intensidade ${n.rotulo}${f.frp != null ? ` · FRP ${f.frp.toLocaleString('pt-BR')} MW` : ''}<br>${esc(f.municipio)} · satélite ${esc(f.satelite)}</div>
+            <small>Detectado ${tempo(f.data_deteccao)} · ${f.latitude.toFixed(4)}, ${f.longitude.toFixed(4)}</small>
+        </div>`;
+    };
 
     const desenhar = () => {
         camada.clearLayers();
         marcadores.clear();
-        const visiveis = filtro ? relatos.filter(r => r.tipo === filtro) : relatos;
+        camadaFocos.clearLayers();
+        if (mostrarFocos) {
+            focos.forEach(f => L.marker([f.latitude, f.longitude], { icon: chama(nivelFoco(f.frp).cor, { selo: true }) }).bindPopup(popupFoco(f)).addTo(camadaFocos));
+        }
+        const visiveis = filtro ? relatos.filter(r => r.categoria === filtro) : relatos;
 
         visiveis.forEach(r => {
             const m = L.marker([r.latitude, r.longitude], { icon: icone(r) }).bindPopup(popup(r));
@@ -127,9 +157,9 @@
             const li = document.createElement('li');
             if (idsConhecidos && !idsConhecidos.has(r.id)) li.classList.add('novo');
             li.innerHTML = `
-                <div class="item__topo"><i class="ponto" style="background:${TIPOS[r.tipo].cor}"></i>
-                    <span class="item__tipo">${TIPOS[r.tipo].rotulo}</span><span>· ${tempo(r.created_at)}</span></div>
-                <div class="item__desc">${esc(r.descricao) || SINAIS[r.sinal]}</div>`;
+                <div class="item__topo"><i class="ponto" style="background:${CATEGORIAS[r.categoria].cor}"></i>
+                    <span class="item__tipo">${CATEGORIAS[r.categoria].rotulo}</span><span>· ${tempo(r.created_at)}</span></div>
+                <div class="item__desc">${esc(r.descricao) || 'Sem descrição'}</div>`;
             li.addEventListener('click', () => {
                 mapa.flyTo([r.latitude, r.longitude], 14, { duration: 0.8 });
                 marcadores.get(r.id)?.openPopup();
@@ -139,8 +169,9 @@
 
         document.querySelectorAll('[data-cont]').forEach(b => {
             const t = b.dataset.cont;
-            b.textContent = t ? relatos.filter(r => r.tipo === t).length : relatos.length;
+            b.textContent = t ? relatos.filter(r => r.categoria === t).length : relatos.length;
         });
+        document.getElementById('contFocos').textContent = focos.length;
     };
 
     const carregar = async () => {
@@ -162,13 +193,38 @@
         }
     };
 
-    document.querySelectorAll('#filtrosMapa .filtro').forEach(b => b.addEventListener('click', () => {
-        document.querySelectorAll('#filtrosMapa .filtro').forEach(x => x.classList.toggle('ativo', x === b));
-        filtro = b.dataset.tipo;
+    document.querySelectorAll('#filtrosMapa .filtro[data-categoria]').forEach(b => b.addEventListener('click', () => {
+        document.querySelectorAll('#filtrosMapa .filtro[data-categoria]').forEach(x => x.classList.toggle('ativo', x === b));
+        filtro = b.dataset.categoria;
         desenhar();
     }));
+    const botaoInpe = document.getElementById('filtroInpe');
+    botaoInpe.addEventListener('click', () => {
+        mostrarFocos = !mostrarFocos;
+        botaoInpe.classList.toggle('ativo', mostrarFocos);
+        botaoInpe.setAttribute('aria-pressed', mostrarFocos);
+        desenhar();
+    });
+
+    // Focos de calor oficiais (INPE/BDQueimadas) dos últimos 7 dias, via proxy do site.
+    const status = document.getElementById('statusFocos');
+    const carregarFocos = async () => {
+        try {
+            const resp = await fetch(`${el.dataset.focos}?dias=7`, { headers: { Accept: 'application/json' } });
+            const json = await resp.json();
+            if (!resp.ok || !json.disponivel) throw new Error();
+            focos = json.data;
+            status.classList.remove('falhou');
+            status.querySelector('span').textContent = `${focos.length} ${focos.length === 1 ? 'foco de calor detectado' : 'focos de calor detectados'} por satélite na região nos últimos 7 dias · INPE/BDQueimadas`;
+            desenhar();
+        } catch (e) {
+            status.classList.add('falhou');
+            status.querySelector('span').textContent = 'Focos de calor do INPE indisponíveis no momento.';
+        }
+    };
 
     carregar();
+    carregarFocos();
     setInterval(carregar, 20000);
     // A demonstração embutida avisa quando um relato é enviado.
     window.addEventListener('message', (e) => {

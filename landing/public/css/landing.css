@@ -2,7 +2,7 @@
    Serra Alerta — landing page
    ============================================================ */
 :root {
-    --carvao: #171412;
+    --carvao: #161311;
     --carvao-2: #221D1A;
     --carvao-3: #2E2724;
     --areia: #F5EFE6;
@@ -11,15 +11,20 @@
     --tinta-2: #5E5750;
     --tinta-3: #8A8179;
     --borda: #E7DFD4;
-    --brasa: #D9482B;
-    --brasa-2: #F06A3A;
+    --brasa: #C2410C;
+    --brasa-2: #FF7A45;
     --ambar: #F2A541;
     --verde: #2F6B4F;
     --agua: #2D6E8E;
 
-    --controlada: #E8A33D;
-    --irregular: #E4572E;
-    --incendio: #A61E1E;
+    --inpe: #1F5F73;
+    --inpe-vivo: #7CC4D6;
+
+    /* Categorias do app (ui/theme/Color.kt). */
+    --controlada: #A16207;
+    --irregular: #C2410C;
+    --incendio: #991B1B;
+    --fumaca: #57534E;
 
     --raio: 22px;
     --sombra: 0 1px 2px rgba(30, 20, 10, .05), 0 12px 32px -12px rgba(30, 20, 10, .18);
@@ -63,8 +68,8 @@ strong { font-weight: 650; }
     cursor: pointer;
 }
 .btn:hover { transform: translateY(-2px); }
-.btn--brasa { background: var(--brasa); color: #fff; box-shadow: 0 10px 30px -10px rgba(217, 72, 43, .7); }
-.btn--brasa:hover { background: #E4532F; box-shadow: 0 14px 34px -10px rgba(217, 72, 43, .85); }
+.btn--brasa { background: var(--brasa); color: #fff; box-shadow: 0 10px 30px -10px rgba(194, 65, 12, .7); }
+.btn--brasa:hover { background: #D2500F; box-shadow: 0 14px 34px -10px rgba(194, 65, 12, .85); }
 .btn--vidro { background: rgba(255, 255, 255, .07); color: #fff; border-color: rgba(255, 255, 255, .18); backdrop-filter: blur(6px); }
 .btn--vidro:hover { background: rgba(255, 255, 255, .13); }
 .btn--sm { padding: .6em 1.1em; font-size: .92rem; }
@@ -98,7 +103,7 @@ strong { font-weight: 650; }
     min-height: min(100vh, 960px);
     padding: 130px 0 90px;
     background:
-        radial-gradient(120% 80% at 80% 110%, rgba(217, 72, 43, .38), transparent 60%),
+        radial-gradient(120% 80% at 80% 110%, rgba(194, 65, 12, .38), transparent 60%),
         radial-gradient(60% 50% at 10% 0%, rgba(242, 165, 65, .12), transparent 70%),
         var(--carvao);
     color: #fff;
@@ -113,7 +118,7 @@ strong { font-weight: 650; }
 }
 .hero__brilho {
     position: absolute; width: 700px; height: 700px; right: -120px; bottom: -260px;
-    background: radial-gradient(circle, rgba(240, 106, 58, .45), transparent 65%);
+    background: radial-gradient(circle, rgba(255, 122, 69, .45), transparent 65%);
     filter: blur(40px);
     animation: pulsar 6s ease-in-out infinite;
 }
@@ -121,7 +126,7 @@ strong { font-weight: 650; }
 .hero__brasas span {
     position: absolute; bottom: -10px; left: var(--x);
     width: var(--s); height: var(--s); border-radius: 50%;
-    background: radial-gradient(circle, #FFD08A, #F06A3A 60%, transparent 70%);
+    background: radial-gradient(circle, #FFD08A, #FF7A45 60%, transparent 70%);
     opacity: 0;
     animation: subir var(--d) linear var(--a) infinite;
 }
@@ -166,7 +171,7 @@ strong { font-weight: 650; }
     box-shadow:
         0 0 0 2px #4A423D inset,
         0 50px 100px -30px rgba(0, 0, 0, .8),
-        0 0 80px -10px rgba(240, 106, 58, .35);
+        0 0 80px -10px rgba(255, 122, 69, .35);
     transform: rotate(2deg);
     transition: transform .6s cubic-bezier(.2, .8, .2, 1);
 }
@@ -192,7 +197,9 @@ strong { font-weight: 650; }
 .ponto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
 .ponto--controlada { background: var(--controlada); }
 .ponto--irregular { background: var(--irregular); }
-.ponto--incendio { background: var(--incendio); box-shadow: 0 0 0 4px rgba(166, 30, 30, .18); }
+.ponto--incendio { background: var(--incendio); box-shadow: 0 0 0 4px rgba(153, 27, 27, .18); }
+.ponto--fumaca { background: var(--fumaca); }
+.ponto--inpe { background: var(--inpe); box-shadow: 0 0 0 3px var(--inpe-vivo); }
 
 /* ---------- Números ---------- */
 .faixa-numeros { background: var(--creme); padding: 30px 0 10px; position: relative; z-index: 3; }
@@ -256,15 +263,15 @@ strong { font-weight: 650; }
     display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%;
     background: var(--carvao-3); border: 2px solid rgba(255, 255, 255, .12); color: var(--ambar); margin-bottom: 22px;
 }
-.linha-tempo__fim .linha-tempo__marca { background: var(--incendio); border-color: var(--incendio); color: #fff; box-shadow: 0 0 0 8px rgba(166, 30, 30, .25); }
+.linha-tempo__fim .linha-tempo__marca { background: var(--incendio); border-color: var(--incendio); color: #fff; box-shadow: 0 0 0 8px rgba(153, 27, 27, .25); }
 .linha-tempo small { font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ambar); font-weight: 700; }
 .linha-tempo strong { display: block; font-family: var(--fonte-titulo); font-size: 1.25rem; margin: 6px 0 8px; line-height: 1.2; }
 .linha-tempo p { font-size: .95rem; margin: 0; }
 .virada {
     display: flex; gap: 28px; align-items: center;
     padding: 36px 40px; border-radius: var(--raio);
-    background: linear-gradient(120deg, rgba(217, 72, 43, .22), rgba(242, 165, 65, .08));
-    border: 1px solid rgba(240, 106, 58, .35);
+    background: linear-gradient(120deg, rgba(194, 65, 12, .22), rgba(242, 165, 65, .08));
+    border: 1px solid rgba(255, 122, 69, .35);
 }
 .virada__icone { display: grid; place-items: center; flex: none; width: 72px; height: 72px; border-radius: 20px; background: var(--brasa); color: #fff; }
 .virada__icone .ic { width: 34px; height: 34px; }
@@ -281,7 +288,7 @@ strong { font-weight: 650; }
 }
 .passo:hover { transform: translateY(-6px); box-shadow: 0 30px 50px -20px rgba(30, 20, 10, .25); }
 .passo__num { position: absolute; right: 18px; top: -10px; font-family: var(--fonte-titulo); font-size: 7rem; font-weight: 800; color: #F4ECE2; line-height: 1; }
-.passo__icone { position: relative; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 16px; background: #FFE9E1; color: var(--brasa); margin-bottom: 26px; }
+.passo__icone { position: relative; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 16px; background: #FBE4D7; color: var(--brasa); margin-bottom: 26px; }
 .passo__icone .ic { width: 28px; height: 28px; }
 .passo h3 { position: relative; font-size: 1.35rem; margin-bottom: 12px; }
 .passo p { position: relative; color: var(--tinta-2); margin: 0; }
@@ -350,13 +357,8 @@ strong { font-weight: 650; }
 .mapa-lista .item__tipo { font-weight: 600; color: var(--tinta); }
 .mapa-lista .item__desc { font-size: .92rem; margin-top: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .mapa-lista li.novo { animation: destacar 2.4s ease; }
-@keyframes destacar { 0%, 40% { background: #FFE9E1; } }
+@keyframes destacar { 0%, 40% { background: #FBE4D7; } }
 
-.marcador { position: relative; width: 26px; height: 26px; }
-.marcador i { position: absolute; inset: 0; border-radius: 50%; background: var(--cor); opacity: .25; }
-.marcador b { position: absolute; inset: 6px; border-radius: 50%; background: var(--cor); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, .3); }
-.marcador--recente i { animation: onda 1.8s ease-out infinite; }
-@keyframes onda { from { transform: scale(.6); opacity: .6; } to { transform: scale(2.2); opacity: 0; } }
 .leaflet-popup-content-wrapper { border-radius: 16px; box-shadow: var(--sombra); }
 .leaflet-popup-content { margin: 16px 18px; font: 14px/1.5 var(--fonte); color: var(--tinta); }
 .popup__tipo { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; }
@@ -410,16 +412,16 @@ strong { font-weight: 650; }
 .dica h3 { margin-bottom: 8px; }
 .dica p { margin: 0; color: var(--tinta-2); font-size: .96rem; }
 .emergencia {
-    display: grid; grid-template-columns: 1.4fr auto auto; gap: 20px; align-items: center;
+    display: grid; grid-template-columns: 1.4fr auto auto auto; gap: 20px; align-items: center;
     margin-top: 24px; padding: 30px 34px; border-radius: var(--raio);
-    background: linear-gradient(110deg, var(--brasa), #B8341C);
+    background: linear-gradient(110deg, var(--brasa), #9A330A);
     color: #fff;
 }
 .emergencia h3 { font-size: 1.5rem; margin-bottom: 6px; }
 .emergencia p { margin: 0; color: rgba(255, 255, 255, .85); }
 .tel {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-width: 170px; padding: 14px 24px; border-radius: 18px;
+    min-width: 150px; padding: 14px 20px; border-radius: 18px;
     background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .28);
     text-decoration: none; font-size: .9rem; transition: background .2s;
 }
@@ -434,7 +436,7 @@ strong { font-weight: 650; }
 .arq .ic { width: 30px; height: 30px; color: var(--ambar); }
 .arq strong { display: block; font-family: var(--fonte-titulo); font-size: 1.15rem; }
 .arq small { color: rgba(255, 255, 255, .6); font-size: .9rem; }
-.arq--app { background: linear-gradient(120deg, rgba(217, 72, 43, .35), rgba(217, 72, 43, .1)); border-color: rgba(240, 106, 58, .45); }
+.arq--app { background: linear-gradient(120deg, rgba(194, 65, 12, .35), rgba(194, 65, 12, .1)); border-color: rgba(255, 122, 69, .45); }
 .arq--app .ic { color: #fff; }
 .arq--futuro { border-style: dashed; background: transparent; }
 .arq__seta { position: relative; height: 54px; margin-left: 38px; border-left: 2px solid rgba(255, 255, 255, .25); }
@@ -463,12 +465,14 @@ strong { font-weight: 650; }
 .final {
     padding: 130px 0;
     background:
-        radial-gradient(70% 90% at 50% 120%, rgba(217, 72, 43, .55), transparent 70%),
+        radial-gradient(70% 90% at 50% 120%, rgba(194, 65, 12, .55), transparent 70%),
         var(--carvao);
     color: #fff; text-align: center;
 }
 .final h2 { font-size: clamp(2.2rem, 5vw, 4rem); max-width: 14em; margin: 0 auto 20px; }
 .final p { color: rgba(255, 255, 255, .72); font-size: 1.15rem; margin-bottom: 36px; }
+.final .btn + .btn { margin-left: 10px; vertical-align: top; }
+.final .btn { vertical-align: top; margin-top: 6px; }
 
 /* Rodapé */
 .rodape { background: #0F0D0C; color: rgba(255, 255, 255, .6); padding: 70px 0 30px; font-size: .92rem; }
@@ -520,8 +524,8 @@ strong { font-weight: 650; }
     .linha-tempo { grid-template-columns: 1fr 1fr; row-gap: 40px; }
     .linha-tempo::before { display: none; }
     .passos, .graficos, .hipoteses { grid-template-columns: 1fr; }
-    .emergencia { grid-template-columns: 1fr 1fr; }
-    .emergencia > div { grid-column: span 2; }
+    .emergencia { grid-template-columns: repeat(3, 1fr); }
+    .emergencia > div { grid-column: 1 / -1; }
     .rodape__grid { grid-template-columns: 1fr; gap: 30px; }
 }
 @media (max-width: 600px) {
@@ -548,3 +552,24 @@ strong { font-weight: 650; }
     .patrimonio, .grafico, .hipotese { padding: 24px; }
     .hipotese { flex-direction: column; }
 }
+
+/* ---------- Ajustes para o app redesenhado ---------- */
+.chama { width: 34px; height: 34px; display: block; filter: drop-shadow(0 1px 1.5px rgba(22, 19, 17, .35)); transition: transform .15s; }
+.chama:hover { transform: scale(1.12); }
+.chama--recente { animation: pulsar-chama 1.4s ease-in-out infinite alternate; }
+@keyframes pulsar-chama { to { transform: scale(1.15); } }
+.mapa .leaflet-tile-pane { filter: saturate(.3) sepia(.06); }
+.filtro--inpe.ativo { background: var(--inpe); border-color: var(--inpe); }
+.filtro--inpe .ic { width: 1em; height: 1em; }
+.popup__inpe { color: var(--inpe); }
+.mapa-status { margin-top: 12px; font-size: .88rem; color: var(--tinta-3); display: flex; align-items: center; gap: 8px; }
+.mapa-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--inpe-vivo); }
+.mapa-status.falhou i { background: var(--brasa-2); }
+.legenda-tipos--grade { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.legenda-tipos--grade span:last-child { grid-column: 1 / -1; }
+.link-codigo { display: inline-flex; align-items: center; gap: .5em; margin-top: 28px; color: var(--brasa-2); font-weight: 600; text-decoration: none; }
+.link-codigo:hover { text-decoration: underline; }
+.arq--inpe .ic { color: var(--inpe-vivo); }
+.rodape__links { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+.rodape__links a { text-decoration: none; opacity: .85; }
+.rodape__links a:hover { opacity: 1; text-decoration: underline; }

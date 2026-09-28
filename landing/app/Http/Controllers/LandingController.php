@@ -11,6 +11,7 @@ class LandingController extends Controller
     {
         return view('landing', [
             'totalRelatos' => Relato::count(),
+            'repositorio' => 'https://github.com/larisDias/serra-alerta',
 
             // Focos de calor por período (BDQueimadas/INPE), conforme o documento-síntese.
             'focos2020' => [
@@ -32,7 +33,7 @@ class LandingController extends Controller
             'equipe' => [
                 ['nome' => 'André Lyra Fernandes', 'prontuario' => 'BV303139X'],
                 ['nome' => 'Gabriel Maia Miguel', 'prontuario' => 'BV3035522'],
-                ['nome' => "Larissa Gabriela San't Angelo Dias", 'prontuario' => 'BV3032078'],
+                ['nome' => 'Larissa Gabriela Sant’Angelo Dias', 'prontuario' => 'BV3032078'],
                 ['nome' => 'Mariana Peixoto Chahud', 'prontuario' => 'BV3031586'],
                 ['nome' => 'Victoria Carolina Ferreira da Silva', 'prontuario' => 'BV3033848'],
             ],

@@ -7,8 +7,10 @@ on:
       - 'landing/**'
       - '.github/workflows/pages.yml'
   # Atualiza o snapshot dos focos de calor do INPE (uma consulta só, o build continua rápido).
+  # A cada 6 h no primeiro mês; depois só às segundas (o job `agenda` decide qual das duas vale).
   schedule:
-    - cron: '7 * * * *'
+    - cron: '17 */6 * * *'
+    - cron: '17 3 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -20,8 +22,34 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  # A partir desta data o snapshot passa a ser atualizado só semanalmente (o navegador já consulta o INPE ao vivo).
+  ATUALIZACAO_SEMANAL_A_PARTIR_DE: '2026-10-28'
+
 jobs:
+  agenda:
+    runs-on: ubuntu-latest
+    outputs:
+      rodar: ${{ steps.decidir.outputs.rodar }}
+    steps:
+      - id: decidir
+        shell: bash
+        run: |
+          rodar=true
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            semanal=false
+            [[ ! "$(date -u +%F)" < "$ATUALIZACAO_SEMANAL_A_PARTIR_DE" ]] && semanal=true
+            if [ "$semanal" = true ]; then
+              [ "${{ github.event.schedule }}" = "17 3 * * 1" ] || rodar=false
+            else
+              [ "${{ github.event.schedule }}" = "17 */6 * * *" ] || rodar=false
+            fi
+          fi
+          echo "rodar=$rodar" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: agenda
+    if: needs.agenda.outputs.rodar == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:

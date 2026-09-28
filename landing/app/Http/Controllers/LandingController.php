@@ -35,7 +35,7 @@ class LandingController extends Controller
             'equipe' => [
                 ['nome' => 'André Lyra Fernandes', 'prontuario' => 'BV303139X', 'foto' => 'img/equipe/andre.jpg'],
                 ['nome' => 'Gabriel Maia Miguel', 'prontuario' => 'BV3035522', 'foto' => 'img/equipe/gabriel.jpg'],
-                ['nome' => 'Larissa Gabriela Sant’Angelo Dias', 'prontuario' => 'BV3032078'],
+                ['nome' => 'Larissa Gabriela Sant’Angelo Dias', 'prontuario' => 'BV3032078', 'foto' => 'img/equipe/larissa.jpg'],
                 ['nome' => 'Mariana Peixoto Chahud', 'prontuario' => 'BV3031586', 'foto' => 'img/equipe/mariana.jpg'],
                 ['nome' => 'Victoria Carolina Ferreira da Silva', 'prontuario' => 'BV3033848'],
             ],

@@ -47,7 +47,7 @@ class ExportarSite extends Command
         URL::forceRootUrl($base);
 
         $fs->deleteDirectory($destino);
-        foreach (['css', 'js'] as $pasta) {
+        foreach (['css', 'js', 'img'] as $pasta) {
             $fs->copyDirectory(public_path($pasta), "$destino/$pasta");
         }
         foreach (['favicon.ico', 'robots.txt'] as $arquivo) {

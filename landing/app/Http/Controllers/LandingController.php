@@ -33,7 +33,7 @@ class LandingController extends Controller
             'corregos' => ['Córrego da Cachoeira', 'Córrego da Aliança', 'Córrego Sertãozinho', 'Córrego da Estiva', 'Ribeirão do Paraíso', 'Córrego da Bomba', 'Córrego São Pedro', 'Ribeirão dos Porcos'],
 
             'equipe' => [
-                ['nome' => 'André Lyra Fernandes', 'prontuario' => 'BV303139X'],
+                ['nome' => 'André Lyra Fernandes', 'prontuario' => 'BV303139X', 'foto' => 'img/equipe/andre.jpg'],
                 ['nome' => 'Gabriel Maia Miguel', 'prontuario' => 'BV3035522'],
                 ['nome' => 'Larissa Gabriela Sant’Angelo Dias', 'prontuario' => 'BV3032078'],
                 ['nome' => 'Mariana Peixoto Chahud', 'prontuario' => 'BV3031586'],

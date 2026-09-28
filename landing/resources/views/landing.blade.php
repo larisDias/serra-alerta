@@ -486,7 +486,11 @@
             @foreach ($equipe as $m)
                 @php($partes = explode(' ', $m['nome']))
                 <article class="membro revelar">
-                    <span class="membro__avatar">{{ mb_substr($partes[0], 0, 1) }}{{ mb_substr(end($partes), 0, 1) }}</span>
+                    @if (! empty($m['foto']))
+                        <img class="membro__avatar membro__avatar--foto" src="{{ asset($m['foto']) }}" alt="Foto de {{ $m['nome'] }}" width="76" height="76" loading="lazy">
+                    @else
+                        <span class="membro__avatar">{{ mb_substr($partes[0], 0, 1) }}{{ mb_substr(end($partes), 0, 1) }}</span>
+                    @endif
                     <h3>{{ $m['nome'] }}</h3>
                     <small>{{ $m['prontuario'] }}</small>
                 </article>

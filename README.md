@@ -3,6 +3,8 @@
 Monitoramento ambiental colaborativo de queimadas em São João da Boa Vista (SP), com ênfase na Serra da Paulista.
 Projeto de extensão — Bacharelado em Ciência da Computação / Ciências do Ambiente (SBVCIAM), IFSP Câmpus São João da Boa Vista.
 
+**Site no ar:** https://larisdias.github.io/serra-alerta/ (demonstração do app em [`/app`](https://larisdias.github.io/serra-alerta/app))
+
 ## Estrutura
 
 | Pasta | O que é |

@@ -23,6 +23,10 @@
         'book' => '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
         'menu' => '<path d="M4 6h16M4 12h16M4 18h16"/>',
         'video' => '<path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>',
+        'play' => '<polygon points="6 3 20 12 6 21 6 3"/>',
+        'pause' => '<rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/>',
+        'volume-on' => '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>',
+        'volume-off' => '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>',
     ];
     $ic = fn (string $nome, string $classe = 'ic') => '<svg class="'.$classe.'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$icones[$nome].'</svg>';
     $maxFocos = max(array_column(array_merge($focos2020, $focos2025), 'valor'));
@@ -99,10 +103,31 @@
         <div class="video-passos">
             <figure class="video-quadro revelar">
                 @if ($video)
-                    <video controls preload="metadata" playsinline aria-label="Demonstração do Serra Alerta: gravação de tela do app, sem áudio, com os toques visíveis">
-                        <source src="{{ asset($video) }}" type="video/mp4">
-                        Seu navegador não reproduz este vídeo. Use o botão “Baixar para Android” para instalar o app.
-                    </video>
+                    {{-- Player próprio: o JS (ferramenta.js) remove "controls" e liga os controles abaixo. Sem JS, valem os controles nativos. --}}
+                    <div class="player" id="player" tabindex="0" role="region" aria-label="Vídeo de demonstração. Espaço reproduz ou pausa.">
+                        <video id="videoUso" class="player__video" muted playsinline loop preload="metadata" controls @if ($poster) poster="{{ asset($poster) }}" @endif aria-label="Demonstração do Serra Alerta: gravação de tela do app, com os toques visíveis. O vídeo começa mudo e tem sons suaves de toque.">
+                            <source src="{{ asset($video) }}" type="video/mp4">
+                            Seu navegador não reproduz este vídeo. Use o botão “Baixar para Android” para instalar o app.
+                        </video>
+
+                        <div class="player__topo">
+                            <span class="player__dica" id="dicaSom">Toque para ativar o som</span>
+                            <button type="button" class="player__som" id="botaoSom" aria-pressed="false" aria-label="Ativar o som">
+                                {!! $ic('volume-off', 'ic player__som-icone player__som-icone--mudo') !!}
+                                {!! $ic('volume-on', 'ic player__som-icone player__som-icone--com-som') !!}
+                            </button>
+                        </div>
+
+                        <button type="button" class="player__play" id="botaoPlay" aria-label="Reproduzir o vídeo">{!! $ic('play', 'ic ic-cheio') !!}</button>
+                        <span class="player__flash player__flash--play" aria-hidden="true">{!! $ic('play', 'ic ic-cheio') !!}</span>
+                        <span class="player__flash player__flash--pause" aria-hidden="true">{!! $ic('pause', 'ic ic-cheio') !!}</span>
+
+                        <div class="player__barra" id="barra" role="slider" tabindex="0" aria-label="Posição do vídeo" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00">
+                            <span class="player__trilho"></span>
+                            <span class="player__progresso"></span>
+                            <span class="player__cursor"></span>
+                        </div>
+                    </div>
                 @else
                     <div class="video-vazio" role="img" aria-label="Vídeo em breve">
                         {!! $ic('video', 'ic video-vazio__icone') !!}
@@ -110,19 +135,25 @@
                         <span>A gravação de tela do app será publicada aqui.</span>
                     </div>
                 @endif
-                <figcaption>Gravação de tela, sem áudio, com os toques visíveis.</figcaption>
+                @if ($video)
+                    <figcaption>Vídeo de menos de um minuto. Toque no alto-falante para ligar o som.</figcaption>
+                @else
+                    <figcaption>Gravação de tela do app, com os toques visíveis.</figcaption>
+                @endif
             </figure>
 
             <div class="revelar">
                 <h3>Registrar uma ocorrência</h3>
-                <ol class="passos-uso">
-                    <li><strong>Abra o app.</strong> O mapa mostra os relatos da comunidade e os focos de calor do INPE.</li>
-                    <li><strong>Toque no botão da câmera</strong>, no centro da barra inferior (“Registrar ocorrência”).</li>
-                    <li><strong>Permita o uso da câmera e da localização</strong> quando o app pedir. Tire a foto da fumaça ou das chamas, a uma distância segura. Você pode tirar até 3 fotos.</li>
-                    <li><strong>Escolha o tipo</strong> da ocorrência: queima controlada, queimada irregular, incêndio florestal ou fumaça não identificada. Se quiser, escreva uma descrição curta.</li>
-                    <li><strong>Confira o local.</strong> Se o pino estiver longe de você, toque em “Ajustar no mapa”, arraste o mapa e toque em “Confirmar posição”.</li>
-                    <li><strong>Toque em “Registrar ocorrência”.</strong> Quando aparecer “Relato registrado”, toque em “Compartilhar relato” para enviar à Defesa Civil ou à brigada.</li>
-                    <li><strong>Volte ao mapa</strong> e veja o seu relato junto aos focos do INPE.</li>
+                {{-- data-t: segundo do vídeo em que cada passo começa. data-fim: a partir daqui nenhum passo fica destacado. --}}
+                <p class="passos-dica">Toque em um passo para ver o trecho no vídeo.</p>
+                <ol class="passos-uso" data-fim="47.7">
+                    <li data-t="4.2"><button type="button" class="passos-uso__botao"><strong>Abra o app.</strong> O mapa mostra os relatos da comunidade e os focos de calor do INPE.</button></li>
+                    <li data-t="14.4"><button type="button" class="passos-uso__botao"><strong>Toque no botão da câmera</strong>, no centro da barra inferior (“Registrar ocorrência”).</button></li>
+                    <li data-t="18.6"><button type="button" class="passos-uso__botao"><strong>Permita o uso da câmera e da localização</strong> quando o app pedir. Tire a foto da fumaça ou das chamas, a uma distância segura. Você pode tirar até 3 fotos.</button></li>
+                    <li data-t="21.2"><button type="button" class="passos-uso__botao"><strong>Escolha o tipo</strong> da ocorrência: queima controlada, queimada irregular, incêndio florestal ou fumaça não identificada. Se quiser, escreva uma descrição curta.</button></li>
+                    <li data-t="24.7"><button type="button" class="passos-uso__botao"><strong>Confira o local.</strong> Se o pino estiver longe de você, toque em “Ajustar no mapa”, arraste o mapa e toque em “Confirmar posição”.</button></li>
+                    <li data-t="27.9"><button type="button" class="passos-uso__botao"><strong>Toque em “Registrar ocorrência”.</strong> Quando aparecer “Relato registrado”, toque em “Compartilhar relato” para enviar à Defesa Civil ou à brigada.</button></li>
+                    <li data-t="34.4"><button type="button" class="passos-uso__botao"><strong>Volte ao mapa</strong> e veja o seu relato junto aos focos do INPE.</button></li>
                 </ol>
                 <p class="aviso aviso--compacto">{!! $ic('info') !!}<span><strong>Sem conta, sem cadastro.</strong> O app não pede login e não coleta dados pessoais identificáveis.</span></p>
             </div>

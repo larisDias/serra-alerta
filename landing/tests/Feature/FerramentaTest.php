@@ -21,6 +21,41 @@ class FerramentaTest extends TestCase
             ->assertSee('img/mapas/mapa3-focos-setembro-2025.png');
     }
 
+    public function test_player_do_video_tem_botao_de_som_e_comeca_mudo(): void
+    {
+        if (! file_exists(public_path('video/como-usar.mp4'))) {
+            $this->markTestSkipped('O vídeo de demonstração não está em public/video.');
+        }
+
+        $resposta = $this->get('/ferramenta')->assertOk();
+
+        $resposta
+            ->assertSee('<video', false)
+            ->assertSee('muted playsinline loop preload="metadata"', false)
+            ->assertSee('id="botaoSom"', false)
+            ->assertSee('aria-label="Ativar o som"', false)
+            ->assertSee('aria-pressed="false"', false)
+            ->assertSee('id="barra"', false)
+            ->assertSee('Toque para ativar o som', false)
+            ->assertSee('Vídeo de menos de um minuto', false);
+
+        if (file_exists(public_path('video/poster.jpg'))) {
+            $resposta->assertSee('poster="', false);
+        }
+    }
+
+    public function test_passos_do_video_tem_os_instantes_em_data_t(): void
+    {
+        $html = $this->get('/ferramenta')->assertOk()->getContent();
+
+        foreach (['4.2', '14.4', '18.6', '21.2', '24.7', '27.9', '34.4'] as $instante) {
+            $this->assertStringContainsString('data-t="'.$instante.'"', $html);
+        }
+
+        $this->assertSame(7, substr_count($html, 'data-t="'));
+        $this->assertStringContainsString('data-fim="47.7"', $html);
+    }
+
     public function test_landing_continua_respondendo(): void
     {
         $this->get('/')->assertOk();

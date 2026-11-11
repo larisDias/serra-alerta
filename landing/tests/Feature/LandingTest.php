@@ -29,13 +29,16 @@ class LandingTest extends TestCase
         $this->assertStringContainsString('Baixar para Android', $html);
     }
 
-    public function test_landing_tem_botao_de_computador_desativado(): void
+    public function test_landing_tem_botao_de_computador_escondido(): void
     {
         $html = $this->get('/')->assertOk()->getContent();
 
-        $this->assertSame(1, substr_count($html, 'class="btn btn--desativado" disabled aria-disabled="true"'));
-        $this->assertStringContainsString('Em breve', $html);
+        $this->assertSame(1, substr_count($html, 'class="btn btn--desativado" disabled aria-disabled="true" aria-hidden="true" hidden>'));
         $this->assertStringContainsString('Versão para computador', $html);
+        $this->assertStringNotContainsString('Em breve', $html);
+        $this->assertStringNotContainsString('Versão para computador em breve', $html);
+        $this->assertStringNotContainsString('selo-breve', $html);
+        $this->assertStringNotContainsString('desktop-aviso', $html);
     }
 
     private function assertNaoLinkaDemoWeb(string $html): void

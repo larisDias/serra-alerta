@@ -74,7 +74,9 @@ strong { font-weight: 650; }
 .btn--vidro:hover { background: rgba(255, 255, 255, .13); }
 .btn--sm { padding: .6em 1.1em; font-size: .92rem; }
 
-/* Versão para computador: ainda não disponível. Botão real, desativado (disabled). */
+/* Versão para computador: botão pronto, mas escondido (atributo hidden) até o lançamento.
+   Quando for exibir, remova hidden; o botão segue disabled até remover também esse atributo.
+   A regra [hidden] vence o display do .btn (inline-flex). */
 .btn--desativado,
 .btn--desativado:hover {
     transform: none; box-shadow: none; cursor: not-allowed;
@@ -83,11 +85,7 @@ strong { font-weight: 650; }
     border: 1px dashed rgba(255, 255, 255, .42);
     opacity: .78;
 }
-.selo-breve {
-    display: inline-block; white-space: nowrap; padding: .3em .6em; border-radius: 999px;
-    font-size: .68rem; font-weight: 700; letter-spacing: .06em; line-height: 1; text-transform: uppercase;
-    background: rgba(242, 165, 65, .2); color: var(--ambar);
-}
+.btn--desativado[hidden] { display: none !important; }
 
 /* ---------- Navegação ---------- */
 .nav {
@@ -462,7 +460,6 @@ strong { font-weight: 650; }
 .final .btn + .btn { margin-left: 10px; vertical-align: top; }
 .final .btn { vertical-align: top; margin-top: 6px; }
 .final .aviso-apk { font-size: .9rem; color: rgba(255, 255, 255, .55); margin: 22px 0 0; }
-.final .desktop-aviso { display: block; margin-top: 16px; font-size: .9rem; color: rgba(255, 255, 255, .75); }
 
 /* Rodapé */
 .rodape { background: #0F0D0C; color: rgba(255, 255, 255, .6); padding: 70px 0 30px; font-size: .92rem; }
@@ -533,6 +530,8 @@ strong { font-weight: 650; }
     .tel { min-width: 0; }
     .patrimonio, .grafico, .hipotese { padding: 24px; }
     .hipotese { flex-direction: column; }
+    /* CTA final empilhado: sem o recuo lateral, os botões ficam centralizados e alinhados. */
+    .final .btn + .btn { margin-left: 0; }
 }
 
 /* ---------- Ajustes para o app redesenhado ---------- */

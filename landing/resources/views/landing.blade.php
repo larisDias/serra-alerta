@@ -497,9 +497,10 @@
         <h2>A Serra da Paulista precisa de mais olhos.</h2>
         <p>Cada relato encurta o caminho entre a primeira fumaça e a primeira equipe em campo.</p>
         <a href="{{ $apk }}" class="btn btn--brasa" target="_blank" rel="noopener">{!! $ic('download') !!} Baixar para Android</a>
-        <button type="button" class="btn btn--desativado" disabled aria-disabled="true" title="Disponível em breve">{!! $ic('monitor') !!} Versão para computador <span class="selo-breve">Em breve</span></button>
+        {{-- Versão para computador: pronta, escondida até o lançamento. Para exibir, remova o atributo hidden. --}}
+        {{-- Continua disabled de propósito: ao exibir, remova também o disabled e o aria-disabled. --}}
+        <button type="button" class="btn btn--desativado" disabled aria-disabled="true" aria-hidden="true" hidden>{!! $ic('monitor') !!} Versão para computador</button>
         <a href="{{ $repositorio }}" class="btn btn--vidro" target="_blank" rel="noopener">{!! $ic('code') !!} Código no GitHub</a>
-        <span class="desktop-aviso">Versão para computador em breve.</span>
         <p class="aviso-apk">Grátis · Android 7.0 ou mais novo · na instalação, permita instalar apps de fontes desconhecidas.</p>
     </div>
 </section>

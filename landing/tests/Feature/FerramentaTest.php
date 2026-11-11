@@ -69,7 +69,7 @@ class FerramentaTest extends TestCase
         $this->assertStringContainsString('aria-label="Assistir de novo"', $html);
         $this->assertStringContainsString('<span class="player__repetir-rotulo">Assistir de novo</span>', $html);
         $this->assertStringContainsString(
-            '<button type="button" class="player__app player__app--desativado" disabled aria-disabled="true" title="Disponível em breve">',
+            '<button type="button" class="player__app player__app--desativado" disabled aria-disabled="true" aria-hidden="true" hidden>',
             $html
         );
         $this->assertStringNotContainsString('Experimentar o app', $html);
@@ -88,14 +88,18 @@ class FerramentaTest extends TestCase
         $this->assertStringNotContainsString('Demonstração do app', $html);
     }
 
-    public function test_ferramenta_tem_botao_de_computador_desativado(): void
+    public function test_ferramenta_tem_botao_de_computador_escondido(): void
     {
         $html = $this->get('/ferramenta')->assertOk()->getContent();
 
-        // Hero e CTA final: <button> desativado de verdade, com selo "Em breve".
-        $this->assertSame(2, substr_count($html, 'class="btn btn--desativado" disabled aria-disabled="true"'));
-        $this->assertStringContainsString('Em breve', $html);
+        // Hero e CTA final: <button> pronto, mas com hidden (escondido) e ainda disabled.
+        $this->assertSame(2, substr_count($html, 'class="btn btn--desativado" disabled aria-disabled="true" aria-hidden="true" hidden>'));
         $this->assertStringContainsString('Versão para computador', $html);
+        // Sem selo nem aviso visíveis. O cartão "Vídeo em breve" (minúsculo) pode existir; não conta.
+        $this->assertStringNotContainsString('Em breve', $html);
+        $this->assertStringNotContainsString('Versão para computador em breve', $html);
+        $this->assertStringNotContainsString('selo-breve', $html);
+        $this->assertStringNotContainsString('desktop-aviso', $html);
     }
 
     private function assertNaoLinkaDemoWeb(string $html): void

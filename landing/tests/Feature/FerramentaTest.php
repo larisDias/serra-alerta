@@ -114,12 +114,12 @@ class FerramentaTest extends TestCase
     {
         $html = $this->get('/ferramenta')->assertOk()->getContent();
 
-        foreach (['4.2', '14.4', '18.6', '21.2', '24.7', '27.9', '34.4'] as $instante) {
+        foreach (['3.0', '12.1', '16.0', '19.4', '33.4', '37.5', '42.8'] as $instante) {
             $this->assertStringContainsString('data-t="'.$instante.'"', $html);
         }
 
         $this->assertSame(7, substr_count($html, 'data-t="'));
-        $this->assertStringContainsString('data-fim="47.7"', $html);
+        $this->assertStringContainsString('data-fim="51.8"', $html);
     }
 
     public function test_landing_continua_respondendo(): void

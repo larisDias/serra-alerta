@@ -161,14 +161,14 @@
                 <h3>Registrar uma ocorrência</h3>
                 {{-- data-t: segundo do vídeo em que cada passo começa. data-fim: a partir daqui nenhum passo fica destacado. --}}
                 <p class="passos-dica">Toque em um passo para ver o trecho no vídeo.</p>
-                <ol class="passos-uso" data-fim="47.7">
-                    <li data-t="4.2"><button type="button" class="passos-uso__botao"><strong>Abra o app.</strong> O mapa mostra os relatos da comunidade e os focos de calor do INPE.</button></li>
-                    <li data-t="14.4"><button type="button" class="passos-uso__botao"><strong>Toque no botão da câmera</strong>, no centro da barra inferior (“Registrar ocorrência”).</button></li>
-                    <li data-t="18.6"><button type="button" class="passos-uso__botao"><strong>Permita o uso da câmera e da localização</strong> quando o app pedir. Tire a foto da fumaça ou das chamas, a uma distância segura. Você pode tirar até 3 fotos.</button></li>
-                    <li data-t="21.2"><button type="button" class="passos-uso__botao"><strong>Escolha o tipo</strong> da ocorrência: queima controlada, queimada irregular, incêndio florestal ou fumaça não identificada. Se quiser, escreva uma descrição curta.</button></li>
-                    <li data-t="24.7"><button type="button" class="passos-uso__botao"><strong>Confira o local.</strong> Se o pino estiver longe de você, toque em “Ajustar no mapa”, arraste o mapa e toque em “Confirmar posição”.</button></li>
-                    <li data-t="27.9"><button type="button" class="passos-uso__botao"><strong>Toque em “Registrar ocorrência”.</strong> Quando aparecer “Relato registrado”, toque em “Compartilhar relato” para enviar à Defesa Civil ou à brigada.</button></li>
-                    <li data-t="34.4"><button type="button" class="passos-uso__botao"><strong>Volte ao mapa</strong> e veja o seu relato junto aos focos do INPE.</button></li>
+                <ol class="passos-uso" data-fim="51.8">
+                    <li data-t="3.0"><button type="button" class="passos-uso__botao"><strong>Abra o app.</strong> O mapa mostra os relatos da comunidade e os focos de calor do INPE.</button></li>
+                    <li data-t="12.1"><button type="button" class="passos-uso__botao"><strong>Toque no botão da câmera</strong>, no centro da barra inferior (“Registrar ocorrência”).</button></li>
+                    <li data-t="16.0"><button type="button" class="passos-uso__botao"><strong>Permita o uso da câmera e da localização</strong> quando o app pedir. Tire a foto da fumaça ou das chamas, a uma distância segura. Você pode tirar até 3 fotos.</button></li>
+                    <li data-t="19.4"><button type="button" class="passos-uso__botao"><strong>Escolha o tipo</strong> da ocorrência: queima controlada, queimada irregular, incêndio florestal ou fumaça não identificada. Se quiser, escreva uma descrição curta.</button></li>
+                    <li data-t="33.4"><button type="button" class="passos-uso__botao"><strong>Confira o local.</strong> Se o pino estiver longe de você, toque em “Ajustar no mapa”, arraste o mapa e toque em “Confirmar posição”.</button></li>
+                    <li data-t="37.5"><button type="button" class="passos-uso__botao"><strong>Toque em “Registrar ocorrência”.</strong> Quando aparecer “Relato registrado”, toque em “Compartilhar relato” para enviar à Defesa Civil ou à brigada.</button></li>
+                    <li data-t="42.8"><button type="button" class="passos-uso__botao"><strong>Volte ao mapa</strong> e veja o seu relato junto aos focos do INPE.</button></li>
                 </ol>
                 <p class="aviso aviso--compacto">{!! $ic('info') !!}<span><strong>Sem conta, sem cadastro.</strong> O app não pede login e não coleta dados pessoais identificáveis.</span></p>
             </div>

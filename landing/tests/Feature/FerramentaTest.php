@@ -69,9 +69,41 @@ class FerramentaTest extends TestCase
         $this->assertStringContainsString('aria-label="Assistir de novo"', $html);
         $this->assertStringContainsString('<span class="player__repetir-rotulo">Assistir de novo</span>', $html);
         $this->assertStringContainsString(
-            '<a href="'.route('app.demo').'" class="player__app" target="_blank" rel="noopener">Experimentar o app',
+            '<button type="button" class="player__app player__app--desativado" disabled aria-disabled="true" title="Disponível em breve">',
             $html
         );
+        $this->assertStringNotContainsString('Experimentar o app', $html);
+    }
+
+    public function test_ferramenta_nao_linka_a_demo_web_e_oferece_download(): void
+    {
+        $html = $this->get('/ferramenta')->assertOk()->getContent();
+
+        $this->assertNaoLinkaDemoWeb($html);
+        $this->assertStringContainsString('href="https://github.com/larisDias/serra-alerta/releases/latest"', $html);
+        $this->assertStringContainsString('Baixar para Android', $html);
+        $this->assertStringContainsString('Baixar o app', $html);
+        $this->assertStringNotContainsString('Abrir o app', $html);
+        $this->assertStringNotContainsString('Experimentar o protótipo', $html);
+        $this->assertStringNotContainsString('Demonstração do app', $html);
+    }
+
+    public function test_ferramenta_tem_botao_de_computador_desativado(): void
+    {
+        $html = $this->get('/ferramenta')->assertOk()->getContent();
+
+        // Hero e CTA final: <button> desativado de verdade, com selo "Em breve".
+        $this->assertSame(2, substr_count($html, 'class="btn btn--desativado" disabled aria-disabled="true"'));
+        $this->assertStringContainsString('Em breve', $html);
+        $this->assertStringContainsString('Versão para computador', $html);
+    }
+
+    private function assertNaoLinkaDemoWeb(string $html): void
+    {
+        $this->assertDoesNotMatchRegularExpression('#href="[^"]*/app(/|\?|")#', $html);
+        $this->assertStringNotContainsString('app?embed=1', $html);
+        $this->assertStringNotContainsString('app/embed.html', $html);
+        $this->assertStringNotContainsString('<iframe', $html);
     }
 
     public function test_passos_do_video_tem_os_instantes_em_data_t(): void

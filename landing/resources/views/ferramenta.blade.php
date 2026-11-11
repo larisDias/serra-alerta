@@ -28,6 +28,7 @@
         'replay' => '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
         'volume-on' => '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>',
         'volume-off' => '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>',
+        'monitor' => '<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/>',
     ];
     $ic = fn (string $nome, string $classe = 'ic') => '<svg class="'.$classe.'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$icones[$nome].'</svg>';
     $maxFocos = max(array_column(array_merge($focos2020, $focos2025), 'valor'));
@@ -67,7 +68,7 @@
             <a href="#prevencao">Prevenção</a>
             <a href="#referencias">Referências</a>
         </nav>
-        <a href="{{ route('app.demo') }}" class="btn btn--brasa btn--sm nav__cta" target="_blank" rel="noopener">Abrir o app</a>
+        <a href="{{ $apk }}" class="btn btn--brasa btn--sm nav__cta" target="_blank" rel="noopener">Baixar o app</a>
         <button class="nav__menu" id="navMenu" aria-label="Abrir menu">{!! $ic('menu') !!}</button>
     </div>
 </header>
@@ -86,7 +87,7 @@
         </p>
         <div class="hero__acoes">
             <a href="{{ $apk }}" class="btn btn--brasa" target="_blank" rel="noopener">{!! $ic('download') !!} Baixar para Android</a>
-            <a href="{{ route('app.demo') }}" class="btn btn--vidro" target="_blank" rel="noopener">Abrir o app {!! $ic('arrow') !!}</a>
+            <button type="button" class="btn btn--desativado" disabled aria-disabled="true" title="Disponível em breve">{!! $ic('monitor') !!} Versão para computador <span class="selo-breve">Em breve</span></button>
         </div>
         <p class="aviso-apk">Grátis · Android 7.0 ou mais novo · na instalação, permita instalar apps de fontes desconhecidas.</p>
     </div>
@@ -135,7 +136,7 @@
                                 <span class="player__repetir-circulo">{!! $ic('replay') !!}</span>
                                 <span class="player__repetir-rotulo">Assistir de novo</span>
                             </button>
-                            <a href="{{ route('app.demo') }}" class="player__app" target="_blank" rel="noopener">Experimentar o app {!! $ic('arrow') !!}</a>
+                            <button type="button" class="player__app player__app--desativado" disabled aria-disabled="true" title="Disponível em breve">{!! $ic('monitor') !!} Versão para computador <span class="selo-breve">Em breve</span></button>
                         </div>
                     </div>
                 @else
@@ -531,8 +532,9 @@
         <h2>A Serra da Paulista precisa de mais olhos.</h2>
         <p>Cada relato encurta o caminho entre a primeira fumaça e a primeira equipe em campo.</p>
         <a href="{{ $apk }}" class="btn btn--brasa" target="_blank" rel="noopener">{!! $ic('download') !!} Baixar para Android</a>
-        <a href="{{ route('app.demo') }}" class="btn btn--vidro" target="_blank" rel="noopener">Experimentar o protótipo {!! $ic('arrow') !!}</a>
+        <button type="button" class="btn btn--desativado" disabled aria-disabled="true" title="Disponível em breve">{!! $ic('monitor') !!} Versão para computador <span class="selo-breve">Em breve</span></button>
         <a href="{{ $repositorio }}" class="btn btn--vidro" target="_blank" rel="noopener">{!! $ic('code') !!} Código no GitHub</a>
+        <span class="desktop-aviso">Versão para computador em breve.</span>
         <p class="aviso-apk">Grátis · Android 7.0 ou mais novo · na instalação, permita instalar apps de fontes desconhecidas.</p>
     </div>
 </section>
@@ -550,7 +552,6 @@
             <div class="rodape__links">
                 <a href="{{ route('ferramenta') }}">Sobre a ferramenta (vídeo e documento-síntese)</a>
                 <a href="{{ $apk }}" target="_blank" rel="noopener">Baixar o app (APK)</a>
-                <a href="{{ route('app.demo') }}" target="_blank" rel="noopener">Demonstração do app</a>
                 <a href="{{ $repositorio }}/tree/main/app-android" target="_blank" rel="noopener">Código do app Android</a>
                 <a href="https://terrabrasilis.dpi.inpe.br/queimadas/portal/" target="_blank" rel="noopener">Portal BDQueimadas (INPE)</a>
             </div>

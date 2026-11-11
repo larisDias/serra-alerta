@@ -57,6 +57,7 @@
         <nav class="nav__links" id="navLinks">
             <a href="#problema">O problema</a>
             <a href="#como">Como funciona</a>
+            <a href="{{ route('ferramenta') }}">Sobre a ferramenta</a>
             <a href="#mapa">Mapa</a>
             <a href="#dados">Dados</a>
             <a href="#prevencao">Prevenção</a>
@@ -254,6 +255,7 @@
             {!! $ic('info') !!}
             <p><strong>Relato é um alerta preliminar.</strong> A indicação de fumaça ou foco de calor não equivale automaticamente a um incêndio florestal: ela serve para que os órgãos competentes validem e ajam com celeridade.</p>
         </div>
+        <p class="cabeca cabeca--centro">Quer ver o passo a passo em vídeo e a base teórica do projeto? Veja <a href="{{ route('ferramenta') }}">Sobre a ferramenta</a>.</p>
     </div>
 </section>
 
@@ -524,6 +526,7 @@
             </a>
             <p>Projetos de Extensão — Documento-síntese, edição 2026/2. Instituto Federal de Educação, Ciência e Tecnologia de São Paulo, Câmpus São João da Boa Vista.</p>
             <div class="rodape__links">
+                <a href="{{ route('ferramenta') }}">Sobre a ferramenta (vídeo e documento-síntese)</a>
                 <a href="{{ $apk }}" target="_blank" rel="noopener">Baixar o app (APK)</a>
                 <a href="{{ route('app.demo') }}" target="_blank">Demonstração do app</a>
                 <a href="{{ $repositorio }}/tree/main/app-android" target="_blank" rel="noopener">Código do app Android</a>

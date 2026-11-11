@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\FerramentaController;
 use App\Http\Controllers\FocoController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\RelatoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', LandingController::class)->name('landing');
+Route::get('/ferramenta', FerramentaController::class)->name('ferramenta');
 
 // Demonstração web do app (mesmo layout do app Android).
 Route::view('/app', 'app-demo')->name('app.demo');

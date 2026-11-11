@@ -32,6 +32,7 @@
         const botaoSom = document.getElementById('botaoSom');
         const dica = document.getElementById('dicaSom');
         const botaoPlay = document.getElementById('botaoPlay');
+        const botaoRepetir = document.getElementById('botaoRepetir');
         const barra = document.getElementById('barra');
         const flashPlay = player.querySelector('.player__flash--play');
         const flashPause = player.querySelector('.player__flash--pause');
@@ -47,6 +48,8 @@
         let quadro = 0;
         let passoAtual = -1;
         let arrastando = false;
+        // Estado final: o vídeo terminou e o overlay "Assistir de novo" está na tela. Nele, nada toca sozinho.
+        let terminado = false;
 
         // Com JavaScript, os controles próprios substituem os nativos (sem JS, "controls" continua valendo).
         video.removeAttribute('controls');
@@ -59,7 +62,8 @@
             return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
         };
 
-        const atualizarEstado = () => player.classList.toggle('player--pausado', video.paused);
+        // No estado final o botão de play não aparece (o overlay toma o lugar dele).
+        const atualizarEstado = () => player.classList.toggle('player--pausado', video.paused && !terminado);
 
         // Fração do player que está na tela neste momento (medida agora, não pelo último aviso do observador).
         const proporcaoVisivel = () => {
@@ -92,6 +96,10 @@
         }
 
         function alternarReproducao() {
+            if (terminado) {
+                reiniciar();
+                return;
+            }
             if (video.paused) {
                 pausadoPeloUsuario = false;
                 piscarIcone(flashPlay);
@@ -101,6 +109,34 @@
                 piscarIcone(flashPause);
                 video.pause();
             }
+        }
+
+        /* ----- Fim do vídeo ----- */
+        // Ao terminar, o vídeo fica no último quadro e aparece o overlay (o vídeo não tem "loop").
+        function entrarNoFim() {
+            terminado = true;
+            cancelAnimationFrame(quadro);
+            player.classList.add('player--fim');
+            atualizarEstado();
+            atualizar();
+        }
+
+        // Sai do estado final (ao reiniciar ou ao voltar a um ponto anterior). O CSS faz o fade de 250 ms.
+        function sairDoFim() {
+            if (!terminado) return;
+            terminado = false;
+            player.classList.remove('player--fim');
+            atualizarEstado();
+            atualizar();
+        }
+
+        // Volta a 0 s e toca. Não mexe em video.muted: o som escolhido pela pessoa continua o mesmo.
+        function reiniciar() {
+            pausadoPeloUsuario = false;
+            sairDoFim();
+            video.currentTime = 0;
+            atualizar();
+            reproduzir();
         }
 
         /* ----- Som ----- */
@@ -134,7 +170,8 @@
         /* ----- Progresso, busca e passos ----- */
         function destacarPasso(tempo) {
             let indice = -1;
-            if (tempo < fimDosPassos) {
+            // No estado final nenhum passo fica destacado.
+            if (!terminado && tempo < fimDosPassos) {
                 passos.forEach((li, i) => {
                     if (tempo >= parseFloat(li.dataset.t)) indice = i;
                 });
@@ -152,11 +189,13 @@
         function atualizar() {
             const tempo = video.currentTime || 0;
             const duracao = duracaoValida() ? video.duration : 0;
-            const proporcao = duracao ? Math.min(tempo / duracao, 1) : 0;
+            // No estado final a barra fica cheia (100%).
+            const tempoExibido = terminado ? duracao : tempo;
+            const proporcao = terminado ? 1 : (duracao ? Math.min(tempo / duracao, 1) : 0);
             barra.style.setProperty('--p', proporcao.toFixed(4));
             barra.setAttribute('aria-valuemax', String(Math.floor(duracao)));
-            barra.setAttribute('aria-valuenow', String(Math.floor(tempo)));
-            barra.setAttribute('aria-valuetext', `${formatarTempo(tempo)} de ${formatarTempo(duracao)}`);
+            barra.setAttribute('aria-valuenow', String(Math.floor(tempoExibido)));
+            barra.setAttribute('aria-valuetext', `${formatarTempo(tempoExibido)} de ${formatarTempo(duracao)}`);
             destacarPasso(tempo);
         }
 
@@ -168,7 +207,10 @@
 
         function buscar(tempo) {
             const fim = duracaoValida() ? video.duration : Infinity;
-            video.currentTime = Math.min(Math.max(tempo, 0), fim);
+            const destino = Math.min(Math.max(tempo, 0), fim);
+            // Voltar para antes do fim (barra, teclado ou passo) tira o vídeo do estado final.
+            if (terminado && destino < fim - 0.5) sairDoFim();
+            video.currentTime = destino;
             atualizar();
         }
 
@@ -220,11 +262,22 @@
         });
 
         /* ----- Controles do player ----- */
-        // Clique no vídeo alterna play e pausa.
+        // Clique no vídeo alterna play e pausa (no estado final, reinicia).
         video.addEventListener('click', alternarReproducao);
         botaoPlay.addEventListener('click', () => {
+            if (terminado) {
+                reiniciar();
+                return;
+            }
             pausadoPeloUsuario = false;
             reproduzir();
+        });
+        botaoRepetir.addEventListener('click', reiniciar);
+
+        // No estado final, clicar no fundo do overlay também reinicia. Botões, links e a barra têm ação própria.
+        player.addEventListener('click', (evento) => {
+            if (!terminado || evento.target.closest('a, button, .player__barra')) return;
+            reiniciar();
         });
 
         // Teclado no próprio player: Espaço ou Enter alternam (os botões têm o seu próprio teclado).
@@ -237,6 +290,7 @@
         });
 
         video.addEventListener('play', () => {
+            sairDoFim(); // tocando de novo, o vídeo não está mais no estado final
             atualizarEstado();
             cancelAnimationFrame(quadro);
             quadro = requestAnimationFrame(cicloDeQuadros);
@@ -246,19 +300,21 @@
             cancelAnimationFrame(quadro);
             atualizar();
         });
+        video.addEventListener('ended', entrarNoFim);
         ['timeupdate', 'seeked', 'loadedmetadata', 'durationchange'].forEach((evento) => {
             video.addEventListener(evento, atualizar);
         });
         video.addEventListener('volumechange', atualizarSom);
 
         /* ----- Autoplay: toca ao entrar na tela (50% visível) e pausa ao sair -----
-           Com "reduzir movimento", não toca sozinho: fica o botão de play grande. */
+           Com "reduzir movimento", não toca sozinho: fica o botão de play grande.
+           No estado final não toca sozinho: só o botão "Assistir de novo" ou um clique no player reinicia. */
         if ('IntersectionObserver' in window) {
             const observador = new IntersectionObserver((entradas) => {
                 entradas.forEach((entrada) => {
                     if (entrada.intersectionRatio >= 0.5) {
                         if (!dicaIniciada) iniciarDica();
-                        if (!reduzirMovimento && !pausadoPeloUsuario && video.paused) reproduzir();
+                        if (!reduzirMovimento && !pausadoPeloUsuario && !terminado && video.paused) reproduzir();
                     } else if (!video.paused) {
                         video.pause();
                     }

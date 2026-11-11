@@ -31,7 +31,7 @@ class FerramentaTest extends TestCase
 
         $resposta
             ->assertSee('<video', false)
-            ->assertSee('muted playsinline loop preload="metadata"', false)
+            ->assertSee('muted playsinline preload="metadata"', false)
             ->assertSee('id="botaoSom"', false)
             ->assertSee('aria-label="Ativar o som"', false)
             ->assertSee('aria-pressed="false"', false)
@@ -42,6 +42,36 @@ class FerramentaTest extends TestCase
         if (file_exists(public_path('video/poster.jpg'))) {
             $resposta->assertSee('poster="', false);
         }
+    }
+
+    public function test_video_nao_tem_loop(): void
+    {
+        if (! file_exists(public_path('video/como-usar.mp4'))) {
+            $this->markTestSkipped('O vídeo de demonstração não está em public/video.');
+        }
+
+        $html = $this->get('/ferramenta')->assertOk()->getContent();
+
+        // Sem "loop": ao terminar, aparece o overlay "Assistir de novo" em vez de reiniciar sozinho.
+        $this->assertSame(1, preg_match('/<video\b[^>]*>/', $html, $tag));
+        $this->assertDoesNotMatchRegularExpression('/\sloop[\s>=]/', $tag[0]);
+    }
+
+    public function test_fim_do_video_tem_botao_de_repetir_e_link_para_o_app(): void
+    {
+        if (! file_exists(public_path('video/como-usar.mp4'))) {
+            $this->markTestSkipped('O vídeo de demonstração não está em public/video.');
+        }
+
+        $html = $this->get('/ferramenta')->assertOk()->getContent();
+
+        $this->assertStringContainsString('id="botaoRepetir"', $html);
+        $this->assertStringContainsString('aria-label="Assistir de novo"', $html);
+        $this->assertStringContainsString('<span class="player__repetir-rotulo">Assistir de novo</span>', $html);
+        $this->assertStringContainsString(
+            '<a href="'.route('app.demo').'" class="player__app" target="_blank" rel="noopener">Experimentar o app',
+            $html
+        );
     }
 
     public function test_passos_do_video_tem_os_instantes_em_data_t(): void

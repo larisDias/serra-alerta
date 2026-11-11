@@ -37,6 +37,8 @@
 
 /* ---------- Player do vídeo (contêiner escuro da marca, sem moldura extra) ---------- */
 .player {
+    /* Folga entre os controles e a borda do player (a borda tem raio de 30 px, então nada encosta nos cantos). */
+    --folga: 16px;
     position: relative; isolation: isolate; overflow: hidden;
     width: 100%; max-width: 360px; aspect-ratio: 9 / 16; margin-inline: auto;
     border-radius: 30px; border: 1px solid rgba(255, 255, 255, .06);
@@ -61,7 +63,7 @@
 
 /* Topo: dica e botão de som */
 .player__topo {
-    position: absolute; top: 4px; right: 10px; left: 10px; z-index: 3;
+    position: absolute; top: var(--folga); right: var(--folga); left: var(--folga); z-index: 3;
     align-items: center; justify-content: flex-end; gap: 10px; pointer-events: none;
 }
 .player__dica {
@@ -120,10 +122,11 @@
 .player__flash .ic { width: 30px; height: 30px; }
 .player__flash--play .ic { margin-left: 4px; }
 
-/* Barra de progresso fina, na base do vídeo, com área de toque maior. */
+/* Barra de progresso fina, perto da base do vídeo, recuada das laterais para não encostar nos cantos arredondados.
+   A área de toque (28 px de altura) fica dentro dessa faixa. */
 .player__barra {
-    position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; height: 28px;
-    cursor: pointer; touch-action: none; border-radius: 0 0 30px 30px;
+    position: absolute; left: var(--folga); right: var(--folga); bottom: calc(var(--folga) - 4px); z-index: 3; height: 28px;
+    cursor: pointer; touch-action: none;
 }
 .player__barra:focus-visible { outline: 2px solid var(--ambar); outline-offset: -4px; border-radius: 8px; }
 .player__trilho, .player__progresso {
@@ -146,6 +149,46 @@
 }
 .player__barra:hover .player__cursor,
 .player__barra:focus-visible .player__cursor { opacity: 1; }
+
+/* Estado final: o vídeo terminou. Overlay escurecido com blur leve, sobre o último quadro.
+   Só aparece com JavaScript (a classe player--fim é colocada pelo JS); sem ela, fica invisível e sem cliques. */
+.player__fim {
+    position: absolute; inset: 0; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    padding: 28px 24px; text-align: center;
+    background: rgba(22, 19, 17, .6);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    opacity: 0; visibility: hidden;
+    transition: opacity .25s ease, visibility .25s ease;
+}
+.player--fim .player__fim { opacity: 1; visibility: visible; }
+.player--fim .player__play { display: none; }
+
+.player__repetir {
+    display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 0; cursor: pointer;
+    border: 0; background: none; color: #fff; font: inherit;
+}
+.player__repetir-circulo {
+    display: grid; place-items: center; width: 92px; height: 92px; border-radius: 50%;
+    background: rgba(194, 65, 12, .94); color: #fff;
+    box-shadow: 0 16px 40px -10px rgba(0, 0, 0, .6), 0 0 0 10px rgba(255, 255, 255, .08);
+    transition: background-color .2s ease, transform .2s ease;
+}
+.player__repetir-circulo .ic { width: 38px; height: 38px; }
+.player__repetir:hover .player__repetir-circulo { background: #D2500F; transform: scale(1.05); }
+.player__repetir:focus-visible { outline: 3px solid var(--ambar); outline-offset: 6px; border-radius: 16px; }
+.player__repetir-rotulo { font-family: var(--fonte-titulo); font-size: 1.15rem; font-weight: 700; line-height: 1.2; }
+
+/* Link secundário, discreto (contorno fino, sem cor de destaque). */
+.player__app {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px;
+    color: rgba(255, 255, 255, .92); font-size: .9rem; font-weight: 600; line-height: 1; text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .06);
+    transition: background-color .2s ease;
+}
+.player__app .ic { width: 16px; height: 16px; }
+.player__app:hover { background: rgba(255, 255, 255, .14); }
+.player__app:focus-visible { outline: 3px solid var(--ambar); outline-offset: 3px; }
 
 /* Passos do passo a passo (sincronizados com o vídeo) */
 .passos-dica { margin: -6px 0 16px; font-size: .9rem; color: var(--tinta-3); }
@@ -273,6 +316,7 @@
 }
 @media (min-width: 801px) {
     .player, .video-vazio { max-width: 400px; }
+    .player { --folga: 20px; }
 }
 @media (max-width: 800px) {
     .video-passos { grid-template-columns: minmax(0, 1fr); gap: 48px; }

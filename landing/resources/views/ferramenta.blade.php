@@ -25,6 +25,7 @@
         'video' => '<path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>',
         'play' => '<polygon points="6 3 20 12 6 21 6 3"/>',
         'pause' => '<rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/>',
+        'replay' => '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
         'volume-on' => '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>',
         'volume-off' => '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>',
     ];
@@ -105,7 +106,7 @@
                 @if ($video)
                     {{-- Player próprio: o JS (ferramenta.js) remove "controls" e liga os controles abaixo. Sem JS, valem os controles nativos. --}}
                     <div class="player" id="player" tabindex="0" role="region" aria-label="Vídeo de demonstração. Espaço reproduz ou pausa.">
-                        <video id="videoUso" class="player__video" muted playsinline loop preload="metadata" controls @if ($poster) poster="{{ asset($poster) }}" @endif aria-label="Demonstração do Serra Alerta: gravação de tela do app, com os toques visíveis. O vídeo começa mudo e tem sons suaves de toque.">
+                        <video id="videoUso" class="player__video" muted playsinline preload="metadata" controls @if ($poster) poster="{{ asset($poster) }}" @endif aria-label="Demonstração do Serra Alerta: gravação de tela do app, com os toques visíveis. O vídeo começa mudo e tem sons suaves de toque.">
                             <source src="{{ asset($video) }}" type="video/mp4">
                             Seu navegador não reproduz este vídeo. Use o botão “Baixar para Android” para instalar o app.
                         </video>
@@ -126,6 +127,15 @@
                             <span class="player__trilho"></span>
                             <span class="player__progresso"></span>
                             <span class="player__cursor"></span>
+                        </div>
+
+                        {{-- Estado final (classe player--fim, colocada pelo JS): aparece quando o vídeo termina. --}}
+                        <div class="player__fim" role="group" aria-label="Fim do vídeo">
+                            <button type="button" class="player__repetir" id="botaoRepetir" aria-label="Assistir de novo">
+                                <span class="player__repetir-circulo">{!! $ic('replay') !!}</span>
+                                <span class="player__repetir-rotulo">Assistir de novo</span>
+                            </button>
+                            <a href="{{ route('app.demo') }}" class="player__app" target="_blank" rel="noopener">Experimentar o app {!! $ic('arrow') !!}</a>
                         </div>
                     </div>
                 @else

@@ -13,7 +13,12 @@ class FerramentaTest extends TestCase
     {
         $this->get('/ferramenta')
             ->assertOk()
-            ->assertSee('A ferramenta');
+            ->assertSee('Sobre a ferramenta')
+            ->assertSee('Hipótese ambiental')
+            ->assertSee('Hipótese socioespacial')
+            ->assertSee('img/mapas/mapa1-areas-prioritarias.png')
+            ->assertSee('img/mapas/mapa2-focos-setembro-2020.png')
+            ->assertSee('img/mapas/mapa3-focos-setembro-2025.png');
     }
 
     public function test_landing_continua_respondendo(): void

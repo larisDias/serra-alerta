@@ -1,0 +1,154 @@
+/* ============================================================
+   Serra Alerta — página "Sobre a ferramenta"
+   Só o que a landing.css não cobre. Cores e fontes vêm dos
+   tokens definidos em landing.css (:root).
+   ============================================================ */
+
+/* ---------- Navegação com 9 links ---------- */
+.nav__links { gap: 18px; }
+.nav__links a { white-space: nowrap; font-size: .9rem; }
+.nav__links a.ativo { color: #fff; font-weight: 650; box-shadow: inset 0 -2px 0 var(--brasa-2); }
+
+/* ---------- Hero curto ---------- */
+.hero--curto { display: block; min-height: 0; padding: 150px 0 170px; }
+.hero--curto .hero__texto { position: relative; z-index: 2; }
+.hero--curto h1 { font-size: clamp(2.8rem, 6vw, 4.8rem); margin: 26px 0 22px; }
+.hero--curto .hero__acoes { margin: 34px 0 24px; }
+.hero--curto .hero__acoes + .aviso-apk { margin: 0; }
+
+/* ---------- Vídeo e passo a passo ---------- */
+.video-passos { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 64px; align-items: start; }
+.video-passos h3 { font-size: 1.4rem; margin-bottom: 18px; }
+.video-quadro { margin: 0; }
+.video-quadro video,
+.video-vazio {
+    display: block; width: 100%; max-width: 360px; aspect-ratio: 9 / 16;
+    margin-inline: auto; border-radius: 34px;
+    background: var(--carvao); box-shadow: var(--sombra); object-fit: contain;
+}
+.video-vazio {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    padding: 28px; text-align: center; color: #fff;
+    background: linear-gradient(170deg, var(--carvao) 0%, #2A1D17 100%);
+}
+.video-vazio strong { font-family: var(--fonte-titulo); font-size: 1.5rem; line-height: 1.2; }
+.video-vazio span { color: rgba(255, 255, 255, .7); font-size: .95rem; }
+.video-vazio__icone { width: 56px; height: 56px; color: var(--brasa-2); }
+.video-quadro figcaption { margin-top: 14px; text-align: center; font-size: .9rem; color: var(--tinta-3); }
+
+.passos-uso {
+    list-style: none; margin: 0 0 24px; padding: 0;
+    display: grid; gap: 12px; counter-reset: uso;
+}
+.passos-uso li {
+    counter-increment: uso; position: relative;
+    padding: 16px 20px 16px 72px; min-height: 58px;
+    border-radius: 18px; background: #fff; border: 1px solid var(--borda);
+    color: var(--tinta-2); font-size: .98rem; line-height: 1.5;
+}
+.passos-uso li::before {
+    content: counter(uso); position: absolute; left: 18px; top: 50%; translate: 0 -50%;
+    display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--brasa); color: #fff;
+    font-family: var(--fonte-titulo); font-weight: 800; font-size: 1rem;
+}
+.passos-uso strong { color: var(--tinta); }
+.aviso--compacto { margin: 0; }
+
+/* ---------- Títulos auxiliares ---------- */
+.subtitulo-bloco { font-family: var(--fonte-titulo); font-size: 1.6rem; letter-spacing: -.01em; margin: 96px 0 32px; }
+.subtitulo-texto { font-size: 1.4rem; margin-bottom: 14px; }
+
+/* ---------- Por que importa ---------- */
+.porque {
+    margin-top: 56px; padding: 36px; border-radius: var(--raio);
+    background: #fff; border: 1px solid var(--borda); box-shadow: var(--sombra);
+}
+.porque h3 { font-size: 1.3rem; margin-bottom: 16px; }
+.porque ul { margin: 0 0 18px; padding-left: 20px; color: var(--tinta-2); }
+.porque li { margin-bottom: 8px; }
+.porque strong { color: var(--tinta); }
+.porque__destaque { margin: 0; font-family: var(--fonte-titulo); font-size: 1.2rem; font-weight: 700; color: var(--brasa); }
+
+/* ---------- Dicas em 3 colunas (funcionalidades e prevenção) ---------- */
+.dicas--tres { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 1080px) { .dicas--tres { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .dicas--tres { grid-template-columns: 1fr; } }
+
+/* ---------- Tecnologias (bloco escuro dentro de seção clara) ---------- */
+.tec-bloco { margin-top: 56px; padding: 40px; border-radius: var(--raio); background: var(--carvao); color: #fff; }
+.tec-bloco h3 { font-size: 1.5rem; margin-bottom: 12px; }
+.tec-bloco > p { color: rgba(255, 255, 255, .74); max-width: 62em; }
+.tec-bloco .stack { margin-top: 20px; }
+.tec-bloco__futuro { margin: 24px 0 0; color: rgba(255, 255, 255, .74); }
+.tec-bloco__futuro strong { color: #fff; }
+.tec-bloco .link-codigo { margin-top: 22px; }
+
+/* ---------- Figuras de mapa ---------- */
+.figura { margin: 0; }
+.figura img {
+    width: 100%; height: auto;
+    border-radius: var(--raio); border: 1px solid var(--borda);
+    background: #fff; box-shadow: var(--sombra);
+}
+.figura figcaption { margin-top: 16px; font-size: .92rem; line-height: 1.5; color: var(--tinta-2); }
+.figura figcaption strong { display: block; margin-bottom: 6px; font-weight: 650; color: var(--tinta); }
+.figura__fonte { display: block; font-size: .82rem; color: var(--tinta-3); }
+.sintese { margin-top: 64px; align-items: center; }
+
+/* ---------- Referências (seção escura) ---------- */
+.refs-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; max-width: 920px; }
+.refs-lista li {
+    padding: 18px 22px; border-radius: 16px;
+    background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .1);
+    line-height: 1.5;
+}
+.refs-lista a { color: #FFB38A; text-decoration: none; overflow-wrap: anywhere; }
+.refs-lista a:hover,
+.refs-lista a:focus-visible { text-decoration: underline; }
+
+/* ---------- Foco visível nos links da página ---------- */
+.nav__links a:focus-visible,
+.passo a:focus-visible,
+.dica a:focus-visible,
+.rodape a:focus-visible,
+.final a:focus-visible,
+.hero a:focus-visible,
+.emergencia a:focus-visible {
+    outline: 3px solid var(--ambar); outline-offset: 3px; border-radius: 8px;
+}
+
+/* ---------- Navegação em telas médias: 9 links não cabem ao lado da marca ---------- */
+@media (max-width: 1180px) {
+    .nav__links {
+        position: fixed; inset: 64px 16px auto; flex-direction: column; gap: 0;
+        padding: 10px; border-radius: 18px; background: rgba(23, 20, 18, .97);
+        display: none; max-height: calc(100vh - 90px); overflow-y: auto;
+    }
+    .nav__links.aberto { display: flex; }
+    .nav__links a { padding: 12px 14px; font-size: .95rem; }
+    .nav__links a.ativo { box-shadow: none; background: rgba(255, 255, 255, .08); border-radius: 12px; }
+    .nav__menu { display: block; margin-left: auto; }
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 1080px) {
+    .sintese { margin-top: 48px; }
+}
+@media (max-width: 860px) {
+    .hero--curto { padding-top: 130px; }
+}
+@media (max-width: 800px) {
+    .video-passos { grid-template-columns: 1fr; gap: 48px; }
+}
+@media (max-width: 600px) {
+    .hero--curto { padding: 120px 0 150px; }
+    .video-quadro video, .video-vazio { max-width: 300px; }
+    .passos-uso li { padding: 16px 16px 16px 64px; }
+    .passos-uso li::before { left: 14px; }
+    .subtitulo-bloco { margin-top: 64px; font-size: 1.4rem; }
+    .porque, .tec-bloco { padding: 24px; }
+    .refs-lista li { padding: 16px; }
+    .sintese { margin-top: 40px; }
+    .graficos .barra__rotulo { font-size: .72rem; }
+}

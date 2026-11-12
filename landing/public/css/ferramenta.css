@@ -1,0 +1,353 @@
+/* ============================================================
+   Serra Alerta — página "Sobre a ferramenta"
+   Só o que a landing.css não cobre. Cores e fontes vêm dos
+   tokens definidos em landing.css (:root).
+   ============================================================ */
+
+/* ---------- Navegação com 9 links ---------- */
+.nav__links { gap: 18px; }
+.nav__links a { white-space: nowrap; font-size: .9rem; }
+.nav__links a.ativo { color: #fff; font-weight: 650; box-shadow: inset 0 -2px 0 var(--brasa-2); }
+
+/* ---------- Hero curto ---------- */
+.hero--curto { display: block; min-height: 0; padding: 150px 0 170px; }
+.hero--curto .hero__texto { position: relative; z-index: 2; }
+.hero--curto h1 { font-size: clamp(2.8rem, 6vw, 4.8rem); margin: 26px 0 22px; }
+.hero--curto .hero__acoes { margin: 34px 0 24px; }
+.hero--curto .hero__acoes + .aviso-apk { margin: 0; }
+
+/* ---------- Vídeo e passo a passo ---------- */
+.video-passos { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 64px; align-items: start; }
+.video-passos h3 { font-size: 1.4rem; margin-bottom: 18px; }
+.video-quadro { margin: 0; }
+.video-quadro figcaption { margin-top: 14px; text-align: center; font-size: .9rem; color: var(--tinta-3); }
+.ic-cheio { fill: currentColor; stroke: none; }
+
+/* Vazio (sem vídeo): mesmo espaço 9:16 do player, para a página não mudar de forma. */
+.video-vazio {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    width: 100%; max-width: 360px; aspect-ratio: 9 / 16; margin-inline: auto;
+    padding: 28px; text-align: center; color: #fff; border-radius: 30px;
+    background: linear-gradient(170deg, var(--carvao) 0%, #2A1D17 100%);
+    box-shadow: var(--sombra);
+}
+.video-vazio strong { font-family: var(--fonte-titulo); font-size: 1.5rem; line-height: 1.2; }
+.video-vazio span { color: rgba(255, 255, 255, .7); font-size: .95rem; }
+.video-vazio__icone { width: 56px; height: 56px; color: var(--brasa-2); }
+
+/* ---------- Player do vídeo (contêiner escuro da marca, sem moldura extra) ---------- */
+.player {
+    /* Folga entre os controles e a borda do player (a borda tem raio de 30 px, então nada encosta nos cantos). */
+    --folga: 16px;
+    position: relative; isolation: isolate; overflow: hidden;
+    width: 100%; max-width: 360px; aspect-ratio: 9 / 16; margin-inline: auto;
+    border-radius: 30px; border: 1px solid rgba(255, 255, 255, .06);
+    background: var(--carvao);
+    box-shadow: var(--sombra), 0 40px 70px -40px rgba(194, 65, 12, .55);
+}
+.player:focus-visible { outline: 3px solid var(--ambar); outline-offset: 4px; }
+.player__video {
+    position: absolute; inset: 0; z-index: 0;
+    width: 100%; height: 100%; display: block; object-fit: contain; background: var(--carvao);
+}
+
+/* Controles próprios só aparecem com JavaScript (a classe player--ativo é colocada pelo JS). */
+.player .player__topo,
+.player .player__play,
+.player .player__flash,
+.player .player__barra { display: none; }
+.player--ativo .player__topo { display: flex; }
+.player--ativo .player__barra { display: block; }
+.player--ativo .player__play { display: grid; }
+.player--ativo .player__flash { display: grid; }
+
+/* Topo: dica e botão de som */
+.player__topo {
+    position: absolute; top: var(--folga); right: var(--folga); left: var(--folga); z-index: 3;
+    align-items: center; justify-content: flex-end; gap: 10px; pointer-events: none;
+}
+.player__dica {
+    display: inline-flex; align-items: center; padding: 10px 14px; border-radius: 999px;
+    background: rgba(22, 19, 17, .74); color: #fff; font-size: .84rem; font-weight: 600; line-height: 1; white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, .14); backdrop-filter: blur(8px);
+    transition: opacity .4s ease, transform .4s ease;
+    animation: dicaEntrar .6s ease .3s backwards;
+}
+.player__dica.oculta { opacity: 0; transform: translateX(10px); }
+@keyframes dicaEntrar { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+
+.player__som {
+    position: relative; pointer-events: auto; flex: none;
+    display: grid; place-items: center; width: 40px; height: 40px; padding: 0; cursor: pointer;
+    border-radius: 50%; border: 1px solid rgba(255, 255, 255, .2);
+    background: rgba(22, 19, 17, .74); color: #fff; backdrop-filter: blur(8px);
+    transition: background-color .2s ease, transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.player__som:hover { background: rgba(44, 36, 32, .92); transform: scale(1.06); }
+.player__som[aria-pressed="true"] {
+    background: var(--brasa); border-color: transparent; box-shadow: 0 8px 22px -8px rgba(194, 65, 12, .9);
+}
+.player__som:focus-visible { outline: 3px solid var(--ambar); outline-offset: 3px; }
+.player__som-icone { width: 22px; height: 22px; }
+.player__som-icone--com-som,
+.player__som[aria-pressed="true"] .player__som-icone--mudo { display: none; }
+.player__som[aria-pressed="true"] .player__som-icone--com-som { display: block; }
+/* Anel pulsando enquanto a dica está visível. */
+.player__som.pulsa::after {
+    content: ""; position: absolute; inset: -6px; border-radius: 50%; pointer-events: none;
+    border: 2px solid var(--brasa-2); animation: pulsoSom 1.8s ease-out infinite;
+}
+@keyframes pulsoSom { from { opacity: .9; transform: scale(.9); } to { opacity: 0; transform: scale(1.35); } }
+
+/* Play grande: aparece quando o vídeo está pausado (início, fora da tela, sem permissão de reprodução). */
+.player__play {
+    position: absolute; left: 50%; top: 50%; z-index: 2; translate: -50% -50%;
+    place-items: center; width: 84px; height: 84px; padding: 0; cursor: pointer;
+    border: 0; border-radius: 50%; background: rgba(194, 65, 12, .94); color: #fff;
+    box-shadow: 0 16px 40px -10px rgba(0, 0, 0, .6), 0 0 0 10px rgba(255, 255, 255, .08);
+    opacity: 0; visibility: hidden; transform: scale(.9);
+    transition: opacity .25s ease, transform .25s ease, visibility .25s, background-color .2s ease;
+}
+.player--pausado .player__play { opacity: 1; visibility: visible; transform: none; }
+.player__play:hover { background: #D2500F; }
+.player__play:focus-visible { outline: 3px solid var(--ambar); outline-offset: 4px; }
+.player__play .ic { width: 32px; height: 32px; margin-left: 5px; }
+
+/* Ícone que pisca ao tocar/pausar (animado pelo JS com a Web Animations API). */
+.player__flash {
+    position: absolute; left: 50%; top: 50%; z-index: 2; translate: -50% -50%;
+    place-items: center; width: 74px; height: 74px; border-radius: 50%;
+    background: rgba(22, 19, 17, .62); color: #fff; opacity: 0; pointer-events: none;
+}
+.player__flash .ic { width: 30px; height: 30px; }
+.player__flash--play .ic { margin-left: 4px; }
+
+/* Barra de progresso fina, perto da base do vídeo, recuada das laterais para não encostar nos cantos arredondados.
+   A área de toque (28 px de altura) fica dentro dessa faixa. */
+.player__barra {
+    position: absolute; left: var(--folga); right: var(--folga); bottom: calc(var(--folga) - 4px); z-index: 3; height: 28px;
+    cursor: pointer; touch-action: none;
+}
+.player__barra:focus-visible { outline: 2px solid var(--ambar); outline-offset: -4px; border-radius: 8px; }
+.player__trilho, .player__progresso {
+    position: absolute; left: 0; bottom: 8px; height: 4px; border-radius: 4px;
+    transition: transform .2s ease;
+}
+.player__trilho { right: 0; background: rgba(255, 255, 255, .2); }
+.player__progresso {
+    width: calc(var(--p, 0) * 100%);
+    background: linear-gradient(90deg, var(--brasa), var(--brasa-2));
+    box-shadow: 0 0 10px rgba(255, 122, 69, .6);
+}
+.player__barra:hover .player__trilho,
+.player__barra:hover .player__progresso { transform: scaleY(1.6); }
+.player__cursor {
+    position: absolute; bottom: 4px; left: calc(var(--p, 0) * 100%); z-index: 1;
+    width: 12px; height: 12px; margin-left: -6px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 0 3px rgba(255, 122, 69, .45);
+    opacity: 0; transition: opacity .2s ease; pointer-events: none;
+}
+.player__barra:hover .player__cursor,
+.player__barra:focus-visible .player__cursor { opacity: 1; }
+
+/* Estado final: o vídeo terminou. Overlay escurecido com blur leve, sobre o último quadro.
+   Só aparece com JavaScript (a classe player--fim é colocada pelo JS); sem ela, fica invisível e sem cliques. */
+.player__fim {
+    position: absolute; inset: 0; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    padding: 28px 24px; text-align: center;
+    background: rgba(22, 19, 17, .6);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    opacity: 0; visibility: hidden;
+    transition: opacity .25s ease, visibility .25s ease;
+}
+.player--fim .player__fim { opacity: 1; visibility: visible; }
+.player--fim .player__play { display: none; }
+
+.player__repetir {
+    display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 0; cursor: pointer;
+    border: 0; background: none; color: #fff; font: inherit;
+}
+.player__repetir-circulo {
+    display: grid; place-items: center; width: 92px; height: 92px; border-radius: 50%;
+    background: rgba(194, 65, 12, .94); color: #fff;
+    box-shadow: 0 16px 40px -10px rgba(0, 0, 0, .6), 0 0 0 10px rgba(255, 255, 255, .08);
+    transition: background-color .2s ease, transform .2s ease;
+}
+.player__repetir-circulo .ic { width: 38px; height: 38px; }
+.player__repetir:hover .player__repetir-circulo { background: #D2500F; transform: scale(1.05); }
+.player__repetir:focus-visible { outline: 3px solid var(--ambar); outline-offset: 6px; border-radius: 16px; }
+.player__repetir-rotulo { font-family: var(--fonte-titulo); font-size: 1.15rem; font-weight: 700; line-height: 1.2; }
+
+/* Link secundário, discreto (contorno fino, sem cor de destaque). */
+.player__app {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px;
+    color: rgba(255, 255, 255, .92); font-size: .9rem; font-weight: 600; line-height: 1; text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .06);
+    transition: background-color .2s ease;
+}
+.player__app .ic { width: 16px; height: 16px; }
+.player__app:hover { background: rgba(255, 255, 255, .14); }
+.player__app:focus-visible { outline: 3px solid var(--ambar); outline-offset: 3px; }
+
+/* Versão para computador: botão escondido (atributo hidden) até o lançamento. */
+.player__app--desativado,
+.player__app--desativado:hover {
+    font: inherit; font-size: .9rem; font-weight: 600;
+    background: rgba(255, 255, 255, .06); border: 1px dashed rgba(255, 255, 255, .42);
+    opacity: .78; cursor: not-allowed;
+}
+/* [hidden] precisa vencer o display: inline-flex do .player__app. */
+.player__app[hidden] { display: none !important; }
+
+/* Estado desativado dos .btn (mesmo visual da landing). */
+.btn--desativado,
+.btn--desativado:hover {
+    transform: none; box-shadow: none; cursor: not-allowed;
+    font-family: inherit; flex-wrap: wrap; justify-content: center; text-align: center; line-height: 1.3;
+    background: rgba(255, 255, 255, .06); color: #fff;
+    border: 1px dashed rgba(255, 255, 255, .42);
+    opacity: .78;
+}
+
+/* Passos do passo a passo (sincronizados com o vídeo) */
+.passos-dica { margin: -6px 0 16px; font-size: .9rem; color: var(--tinta-3); }
+.passos-uso {
+    list-style: none; margin: 0 0 24px; padding: 0;
+    display: grid; gap: 12px; counter-reset: uso;
+}
+.passos-uso li {
+    counter-increment: uso; position: relative;
+    border-radius: 18px; background: #fff; border: 1px solid var(--borda);
+    color: var(--tinta-2); font-size: .98rem; line-height: 1.5;
+    transition: background-color .35s ease, border-color .35s ease, box-shadow .35s ease, transform .35s ease, color .35s ease;
+}
+.passos-uso li::before {
+    content: counter(uso); position: absolute; left: 18px; top: 50%; translate: 0 -50%;
+    display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--brasa); color: #fff;
+    font-family: var(--fonte-titulo); font-weight: 800; font-size: 1rem;
+    transition: background-color .35s ease, box-shadow .35s ease;
+}
+.passos-uso__botao {
+    display: block; width: 100%; min-height: 58px; margin: 0; padding: 16px 20px 16px 72px;
+    border: 0; border-radius: 18px; background: none; color: inherit;
+    font: inherit; line-height: inherit; text-align: left; cursor: pointer;
+}
+.passos-uso__botao:focus-visible { outline: 3px solid var(--ambar); outline-offset: 2px; }
+.passos-uso li:hover { border-color: #E9B49A; }
+.passos-uso li.ativo {
+    background: #FFF3EA; border-color: var(--brasa-2); color: var(--tinta);
+    transform: scale(1.02); box-shadow: 0 14px 28px -18px rgba(194, 65, 12, .7);
+}
+.passos-uso li.ativo::before { background: var(--brasa-2); box-shadow: 0 0 0 5px rgba(255, 122, 69, .2); }
+.passos-uso li.ativo strong { color: var(--brasa); }
+.passos-uso strong { color: var(--tinta); }
+.aviso--compacto { margin: 0; }
+
+/* Quem pede pouco movimento: sem transições e sem anéis pulsando (o vídeo também não toca sozinho). */
+@media (prefers-reduced-motion: reduce) {
+    .player *, .passos-uso li, .passos-uso li::before { transition: none !important; }
+    .player__som.pulsa::after, .player__dica { animation: none !important; }
+}
+
+/* ---------- Títulos auxiliares ---------- */
+.subtitulo-bloco { font-family: var(--fonte-titulo); font-size: 1.6rem; letter-spacing: -.01em; margin: 96px 0 32px; }
+.subtitulo-texto { font-size: 1.4rem; margin-bottom: 14px; }
+
+/* ---------- Por que importa ---------- */
+.porque {
+    margin-top: 56px; padding: 36px; border-radius: var(--raio);
+    background: #fff; border: 1px solid var(--borda); box-shadow: var(--sombra);
+}
+.porque h3 { font-size: 1.3rem; margin-bottom: 16px; }
+.porque ul { margin: 0 0 18px; padding-left: 20px; color: var(--tinta-2); }
+.porque li { margin-bottom: 8px; }
+.porque strong { color: var(--tinta); }
+.porque__destaque { margin: 0; font-family: var(--fonte-titulo); font-size: 1.2rem; font-weight: 700; color: var(--brasa); }
+
+/* ---------- Dicas em 3 colunas (funcionalidades e prevenção) ---------- */
+.dicas--tres { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 1080px) { .dicas--tres { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .dicas--tres { grid-template-columns: 1fr; } }
+
+/* ---------- Tecnologias (bloco escuro dentro de seção clara) ---------- */
+.tec-bloco { margin-top: 56px; padding: 40px; border-radius: var(--raio); background: var(--carvao); color: #fff; }
+.tec-bloco h3 { font-size: 1.5rem; margin-bottom: 12px; }
+.tec-bloco > p { color: rgba(255, 255, 255, .74); max-width: 62em; }
+.tec-bloco .stack { margin-top: 20px; }
+.tec-bloco__futuro { margin: 24px 0 0; color: rgba(255, 255, 255, .74); }
+.tec-bloco__futuro strong { color: #fff; }
+.tec-bloco .link-codigo { margin-top: 22px; }
+
+/* ---------- Figuras de mapa ---------- */
+.figura { margin: 0; }
+.figura img {
+    width: 100%; height: auto;
+    border-radius: var(--raio); border: 1px solid var(--borda);
+    background: #fff; box-shadow: var(--sombra);
+}
+.figura figcaption { margin-top: 16px; font-size: .92rem; line-height: 1.5; color: var(--tinta-2); }
+.figura figcaption strong { display: block; margin-bottom: 6px; font-weight: 650; color: var(--tinta); }
+.figura__fonte { display: block; font-size: .82rem; color: var(--tinta-3); }
+.sintese { margin-top: 64px; align-items: center; }
+
+/* ---------- Referências (seção escura) ---------- */
+.refs-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; max-width: 920px; }
+.refs-lista li {
+    padding: 18px 22px; border-radius: 16px;
+    background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .1);
+    line-height: 1.5;
+}
+.refs-lista a { color: #FFB38A; text-decoration: none; overflow-wrap: anywhere; }
+.refs-lista a:hover,
+.refs-lista a:focus-visible { text-decoration: underline; }
+
+/* ---------- Foco visível nos links da página ---------- */
+.nav__links a:focus-visible,
+.passo a:focus-visible,
+.dica a:focus-visible,
+.rodape a:focus-visible,
+.final a:focus-visible,
+.hero a:focus-visible,
+.emergencia a:focus-visible {
+    outline: 3px solid var(--ambar); outline-offset: 3px; border-radius: 8px;
+}
+
+/* ---------- Navegação em telas médias: 9 links não cabem ao lado da marca ---------- */
+@media (max-width: 1180px) {
+    .nav__links {
+        position: fixed; inset: 64px 16px auto; flex-direction: column; gap: 0;
+        padding: 10px; border-radius: 18px; background: rgba(23, 20, 18, .97);
+        display: none; max-height: calc(100vh - 90px); overflow-y: auto;
+    }
+    .nav__links.aberto { display: flex; }
+    .nav__links a { padding: 12px 14px; font-size: .95rem; }
+    .nav__links a.ativo { box-shadow: none; background: rgba(255, 255, 255, .08); border-radius: 12px; }
+    .nav__menu { display: block; margin-left: auto; }
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 1080px) {
+    .sintese { margin-top: 48px; }
+}
+@media (max-width: 860px) {
+    .hero--curto { padding-top: 130px; }
+}
+@media (min-width: 801px) {
+    .player, .video-vazio { max-width: 400px; }
+    .player { --folga: 20px; }
+}
+@media (max-width: 800px) {
+    .video-passos { grid-template-columns: minmax(0, 1fr); gap: 48px; }
+}
+@media (max-width: 600px) {
+    .hero--curto { padding: 120px 0 150px; }
+    .passos-uso__botao { padding: 16px 16px 16px 64px; }
+    .passos-uso li::before { left: 14px; }
+    .subtitulo-bloco { margin-top: 64px; font-size: 1.4rem; }
+    .porque, .tec-bloco { padding: 24px; }
+    .refs-lista li { padding: 16px; }
+    .sintese { margin-top: 40px; }
+    .graficos .barra__rotulo { font-size: .72rem; }
+}

@@ -27,6 +27,7 @@
         'download' => '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
         'code' => '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>',
         'book' => '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+        'monitor' => '<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/>',
     ];
     $ic = fn (string $nome, string $classe = 'ic') => '<svg class="'.$classe.'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$icones[$nome].'</svg>';
     $maxFocos = max(array_column(array_merge($focos2020, $focos2025), 'valor'));
@@ -57,12 +58,13 @@
         <nav class="nav__links" id="navLinks">
             <a href="#problema">O problema</a>
             <a href="#como">Como funciona</a>
+            <a href="{{ route('ferramenta') }}">Sobre a ferramenta</a>
             <a href="#mapa">Mapa</a>
             <a href="#dados">Dados</a>
             <a href="#prevencao">Prevenção</a>
             <a href="#equipe">Equipe</a>
         </nav>
-        <a href="{{ route('app.demo') }}" class="btn btn--brasa btn--sm nav__cta" target="_blank">Abrir o app</a>
+        <a href="{{ $apk }}" class="btn btn--brasa btn--sm nav__cta" target="_blank" rel="noopener">Baixar o app</a>
         <button class="nav__menu" id="navMenu" aria-label="Abrir menu">{!! $ic('menu') !!}</button>
     </div>
 </header>
@@ -95,21 +97,6 @@
             </ul>
         </div>
 
-        <div class="hero__celular">
-            <div class="celular">
-                <div class="celular__notch"></div>
-                <iframe src="{{ route('app.demo', ['embed' => 1]) }}" title="Demonstração do app Serra Alerta" loading="lazy"></iframe>
-            </div>
-            <div class="flutuante flutuante--a">
-                <span class="ponto ponto--incendio"></span>
-                <div><strong>Novo relato</strong><small>Serra da Paulista · agora</small></div>
-            </div>
-            <div class="flutuante flutuante--b">
-                {!! $ic('clock') !!}
-                <div><strong>&lt; 30 s</strong><small>para reportar um foco</small></div>
-            </div>
-            <p class="hero__dica">Protótipo interativo — toque na câmera para registrar</p>
-        </div>
     </div>
 </section>
 
@@ -254,6 +241,7 @@
             {!! $ic('info') !!}
             <p><strong>Relato é um alerta preliminar.</strong> A indicação de fumaça ou foco de calor não equivale automaticamente a um incêndio florestal: ela serve para que os órgãos competentes validem e ajam com celeridade.</p>
         </div>
+        <p class="cabeca cabeca--centro">Quer ver o passo a passo em vídeo e a base teórica do projeto? Veja <a href="{{ route('ferramenta') }}">Sobre a ferramenta</a>.</p>
     </div>
 </section>
 
@@ -315,7 +303,7 @@
             <div>
                 <span class="rotulo">Mapa colaborativo</span>
                 <h2>Os relatos da comunidade, ao vivo.</h2>
-                <p>Este mapa lê a mesma base da demonstração do app, junto aos focos de calor do INPE dos últimos 7 dias. Envie um relato pelo celular no topo da página e veja-o aparecer aqui.</p>
+                <p>Os relatos da comunidade aparecem aqui, junto aos focos de calor do INPE dos últimos 7 dias. Os relatos são enviados pelo app Android, que você baixa pelo GitHub.</p>
             </div>
             <div class="filtros" id="filtrosMapa" role="group" aria-label="Filtrar por categoria">
                 <button class="filtro ativo" data-categoria="">Todos <b data-cont="">{{ $totalRelatos }}</b></button>
@@ -442,7 +430,7 @@
                 em arquitetura MVVM com camadas de interface, domínio e dados. Os relatos e as fotos ficam no próprio
                 aparelho (SQLite via Room), o que faz o registro funcionar offline e sem custos de infraestrutura; os focos
                 de calor do INPE são consultados em fonte pública e guardados em cache. A arquitetura já prevê a migração
-                para uma API REST e um banco geográfico centralizado, como a demonstração em Laravel deste site.
+                para uma API REST e um banco geográfico centralizado.
             </p>
             <div class="stack">
                 @foreach (['Kotlin', 'Jetpack Compose · Material 3', 'MVVM', 'OSMdroid · OpenStreetMap', 'Fused Location Provider', 'CameraX', 'Room · SQLite', 'INPE · BDQueimadas', 'Laravel · API REST', 'Leaflet'] as $t)
@@ -509,7 +497,9 @@
         <h2>A Serra da Paulista precisa de mais olhos.</h2>
         <p>Cada relato encurta o caminho entre a primeira fumaça e a primeira equipe em campo.</p>
         <a href="{{ $apk }}" class="btn btn--brasa" target="_blank" rel="noopener">{!! $ic('download') !!} Baixar para Android</a>
-        <a href="{{ route('app.demo') }}" class="btn btn--vidro" target="_blank">Experimentar o protótipo {!! $ic('arrow') !!}</a>
+        {{-- Versão para computador: pronta, escondida até o lançamento. Para exibir, remova o atributo hidden. --}}
+        {{-- Continua disabled de propósito: ao exibir, remova também o disabled e o aria-disabled. --}}
+        <button type="button" class="btn btn--desativado" disabled aria-disabled="true" aria-hidden="true" hidden>{!! $ic('monitor') !!} Versão para computador</button>
         <a href="{{ $repositorio }}" class="btn btn--vidro" target="_blank" rel="noopener">{!! $ic('code') !!} Código no GitHub</a>
         <p class="aviso-apk">Grátis · Android 7.0 ou mais novo · na instalação, permita instalar apps de fontes desconhecidas.</p>
     </div>
@@ -524,8 +514,8 @@
             </a>
             <p>Projetos de Extensão — Documento-síntese, edição 2026/2. Instituto Federal de Educação, Ciência e Tecnologia de São Paulo, Câmpus São João da Boa Vista.</p>
             <div class="rodape__links">
+                <a href="{{ route('ferramenta') }}">Sobre a ferramenta (vídeo e documento-síntese)</a>
                 <a href="{{ $apk }}" target="_blank" rel="noopener">Baixar o app (APK)</a>
-                <a href="{{ route('app.demo') }}" target="_blank">Demonstração do app</a>
                 <a href="{{ $repositorio }}/tree/main/app-android" target="_blank" rel="noopener">Código do app Android</a>
                 <a href="https://terrabrasilis.dpi.inpe.br/queimadas/portal/" target="_blank" rel="noopener">Portal BDQueimadas (INPE)</a>
             </div>

@@ -33,6 +33,7 @@ class ExportarSite extends Command
     /** Rota => arquivo gerado. */
     private const PAGINAS = [
         '/' => 'index.html',
+        '/ferramenta' => 'ferramenta/index.html',
         '/app' => 'app/index.html',
         '/app?embed=1' => 'app/embed.html',
         '/api/relatos' => 'api/relatos.json',
@@ -47,7 +48,12 @@ class ExportarSite extends Command
         URL::forceRootUrl($base);
 
         $fs->deleteDirectory($destino);
-        foreach (['css', 'js', 'img'] as $pasta) {
+        $pastas = ['css', 'js', 'img'];
+        // O vídeo de demonstração é opcional: só é copiado se a pasta existir.
+        if ($fs->isDirectory(public_path('video'))) {
+            $pastas[] = 'video';
+        }
+        foreach ($pastas as $pasta) {
             $fs->copyDirectory(public_path($pasta), "$destino/$pasta");
         }
         foreach (['favicon.ico', 'robots.txt'] as $arquivo) {
@@ -143,9 +149,12 @@ class ExportarSite extends Command
     private function adaptar(string $html, string $base): string
     {
         // Sem PHP, a API vem do estatico.js (JSONs + localStorage); ele precisa rodar antes dos scripts da página.
-        $html = preg_replace('#<script src="[^"]*/js/(landing|app-demo)\.js"#', '<script src="' . $base . '/js/estatico.js"></script>' . "\n" . '$0', $html, -1, $n);
-        if ($n !== 1) {
-            throw new RuntimeException('Não achei o <script> da página para injetar o estatico.js.');
+        // Só páginas que carregam landing.js ou app-demo.js precisam dele; as demais (ex.: /ferramenta) têm o próprio JS.
+        if (preg_match('#<script src="[^"]*/js/(landing|app-demo)\.js"#', $html)) {
+            $html = preg_replace('#<script src="[^"]*/js/(landing|app-demo)\.js"#', '<script src="' . $base . '/js/estatico.js"></script>' . "\n" . '$0', $html, -1, $n);
+            if ($n !== 1) {
+                throw new RuntimeException('Não achei o <script> da página para injetar o estatico.js.');
+            }
         }
 
         // ?embed=1 seria ignorado pelo Pages: a versão embutida vira um arquivo próprio.

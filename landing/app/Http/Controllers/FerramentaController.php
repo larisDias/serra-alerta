@@ -17,6 +17,9 @@ class FerramentaController extends Controller
             // Vídeo de demonstração, quando o arquivo existe em public/ (o build estático não quebra sem ele).
             'video' => file_exists(public_path('video/como-usar.mp4')) ? 'video/como-usar.mp4' : null,
 
+            // Quadro inicial do vídeo (gerado com ffmpeg), usado como poster enquanto o vídeo não toca.
+            'poster' => file_exists(public_path('video/poster.jpg')) ? 'video/poster.jpg' : null,
+
             'fazendas' => DadosDoProjeto::fazendas(),
             'corregos' => DadosDoProjeto::corregos(),
 

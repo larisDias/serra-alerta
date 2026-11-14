@@ -23,6 +23,12 @@
         'book' => '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
         'menu' => '<path d="M4 6h16M4 12h16M4 18h16"/>',
         'video' => '<path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>',
+        'play' => '<polygon points="6 3 20 12 6 21 6 3"/>',
+        'pause' => '<rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/>',
+        'replay' => '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+        'volume-on' => '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>',
+        'volume-off' => '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>',
+        'monitor' => '<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/>',
     ];
     $ic = fn (string $nome, string $classe = 'ic') => '<svg class="'.$classe.'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$icones[$nome].'</svg>';
     $maxFocos = max(array_column(array_merge($focos2020, $focos2025), 'valor'));
@@ -62,7 +68,7 @@
             <a href="#prevencao">Prevenção</a>
             <a href="#referencias">Referências</a>
         </nav>
-        <a href="{{ route('app.demo') }}" class="btn btn--brasa btn--sm nav__cta" target="_blank" rel="noopener">Abrir o app</a>
+        <a href="{{ $apk }}" class="btn btn--brasa btn--sm nav__cta" target="_blank" rel="noopener">Baixar o app</a>
         <button class="nav__menu" id="navMenu" aria-label="Abrir menu">{!! $ic('menu') !!}</button>
     </div>
 </header>
@@ -81,7 +87,9 @@
         </p>
         <div class="hero__acoes">
             <a href="{{ $apk }}" class="btn btn--brasa" target="_blank" rel="noopener">{!! $ic('download') !!} Baixar para Android</a>
-            <a href="{{ route('app.demo') }}" class="btn btn--vidro" target="_blank" rel="noopener">Abrir o app {!! $ic('arrow') !!}</a>
+            {{-- Versão para computador: pronta, escondida até o lançamento. Para exibir, remova o atributo hidden. --}}
+            {{-- Continua disabled de propósito: ao exibir, remova também o disabled e o aria-disabled. --}}
+            <button type="button" class="btn btn--desativado" disabled aria-disabled="true" aria-hidden="true" hidden>{!! $ic('monitor') !!} Versão para computador</button>
         </div>
         <p class="aviso-apk">Grátis · Android 7.0 ou mais novo · na instalação, permita instalar apps de fontes desconhecidas.</p>
     </div>
@@ -99,10 +107,42 @@
         <div class="video-passos">
             <figure class="video-quadro revelar">
                 @if ($video)
-                    <video controls preload="metadata" playsinline aria-label="Demonstração do Serra Alerta: gravação de tela do app, sem áudio, com os toques visíveis">
-                        <source src="{{ asset($video) }}" type="video/mp4">
-                        Seu navegador não reproduz este vídeo. Use o botão “Baixar para Android” para instalar o app.
-                    </video>
+                    {{-- Player próprio: o JS (ferramenta.js) remove "controls" e liga os controles abaixo. Sem JS, valem os controles nativos. --}}
+                    <div class="player" id="player" tabindex="0" role="region" aria-label="Vídeo de demonstração. Espaço reproduz ou pausa.">
+                        <video id="videoUso" class="player__video" muted playsinline preload="metadata" controls @if ($poster) poster="{{ asset($poster) }}" @endif aria-label="Demonstração do Serra Alerta: gravação de tela do app, com os toques visíveis. O vídeo começa mudo e tem sons suaves de toque.">
+                            <source src="{{ asset($video) }}" type="video/mp4">
+                            Seu navegador não reproduz este vídeo. Use o botão “Baixar para Android” para instalar o app.
+                        </video>
+
+                        <div class="player__topo">
+                            <span class="player__dica" id="dicaSom">Toque para ativar o som</span>
+                            <button type="button" class="player__som" id="botaoSom" aria-pressed="false" aria-label="Ativar o som">
+                                {!! $ic('volume-off', 'ic player__som-icone player__som-icone--mudo') !!}
+                                {!! $ic('volume-on', 'ic player__som-icone player__som-icone--com-som') !!}
+                            </button>
+                        </div>
+
+                        <button type="button" class="player__play" id="botaoPlay" aria-label="Reproduzir o vídeo">{!! $ic('play', 'ic ic-cheio') !!}</button>
+                        <span class="player__flash player__flash--play" aria-hidden="true">{!! $ic('play', 'ic ic-cheio') !!}</span>
+                        <span class="player__flash player__flash--pause" aria-hidden="true">{!! $ic('pause', 'ic ic-cheio') !!}</span>
+
+                        <div class="player__barra" id="barra" role="slider" tabindex="0" aria-label="Posição do vídeo" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00">
+                            <span class="player__trilho"></span>
+                            <span class="player__progresso"></span>
+                            <span class="player__cursor"></span>
+                        </div>
+
+                        {{-- Estado final (classe player--fim, colocada pelo JS): aparece quando o vídeo termina. --}}
+                        <div class="player__fim" role="group" aria-label="Fim do vídeo">
+                            <button type="button" class="player__repetir" id="botaoRepetir" aria-label="Assistir de novo">
+                                <span class="player__repetir-circulo">{!! $ic('replay') !!}</span>
+                                <span class="player__repetir-rotulo">Assistir de novo</span>
+                            </button>
+                            {{-- Versão para computador: pronta, escondida até o lançamento. Para exibir, remova o atributo hidden. --}}
+                            {{-- Continua disabled de propósito: ao exibir, remova também o disabled e o aria-disabled. --}}
+                            <button type="button" class="player__app player__app--desativado" disabled aria-disabled="true" aria-hidden="true" hidden>{!! $ic('monitor') !!} Versão para computador</button>
+                        </div>
+                    </div>
                 @else
                     <div class="video-vazio" role="img" aria-label="Vídeo em breve">
                         {!! $ic('video', 'ic video-vazio__icone') !!}
@@ -110,19 +150,25 @@
                         <span>A gravação de tela do app será publicada aqui.</span>
                     </div>
                 @endif
-                <figcaption>Gravação de tela, sem áudio, com os toques visíveis.</figcaption>
+                @if ($video)
+                    <figcaption>Vídeo de menos de um minuto. Toque no alto-falante para ligar o som.</figcaption>
+                @else
+                    <figcaption>Gravação de tela do app, com os toques visíveis.</figcaption>
+                @endif
             </figure>
 
             <div class="revelar">
                 <h3>Registrar uma ocorrência</h3>
-                <ol class="passos-uso">
-                    <li><strong>Abra o app.</strong> O mapa mostra os relatos da comunidade e os focos de calor do INPE.</li>
-                    <li><strong>Toque no botão da câmera</strong>, no centro da barra inferior (“Registrar ocorrência”).</li>
-                    <li><strong>Permita o uso da câmera e da localização</strong> quando o app pedir. Tire a foto da fumaça ou das chamas, a uma distância segura. Você pode tirar até 3 fotos.</li>
-                    <li><strong>Escolha o tipo</strong> da ocorrência: queima controlada, queimada irregular, incêndio florestal ou fumaça não identificada. Se quiser, escreva uma descrição curta.</li>
-                    <li><strong>Confira o local.</strong> Se o pino estiver longe de você, toque em “Ajustar no mapa”, arraste o mapa e toque em “Confirmar posição”.</li>
-                    <li><strong>Toque em “Registrar ocorrência”.</strong> Quando aparecer “Relato registrado”, toque em “Compartilhar relato” para enviar à Defesa Civil ou à brigada.</li>
-                    <li><strong>Volte ao mapa</strong> e veja o seu relato junto aos focos do INPE.</li>
+                {{-- data-t: segundo do vídeo em que cada passo começa. data-fim: a partir daqui nenhum passo fica destacado. --}}
+                <p class="passos-dica">Toque em um passo para ver o trecho no vídeo.</p>
+                <ol class="passos-uso" data-fim="51.8">
+                    <li data-t="3.0"><button type="button" class="passos-uso__botao"><strong>Abra o app.</strong> O mapa mostra os relatos da comunidade e os focos de calor do INPE.</button></li>
+                    <li data-t="12.1"><button type="button" class="passos-uso__botao"><strong>Toque no botão da câmera</strong>, no centro da barra inferior (“Registrar ocorrência”).</button></li>
+                    <li data-t="16.0"><button type="button" class="passos-uso__botao"><strong>Permita o uso da câmera e da localização</strong> quando o app pedir. Tire a foto da fumaça ou das chamas, a uma distância segura. Você pode tirar até 3 fotos.</button></li>
+                    <li data-t="19.4"><button type="button" class="passos-uso__botao"><strong>Escolha o tipo</strong> da ocorrência: queima controlada, queimada irregular, incêndio florestal ou fumaça não identificada. Se quiser, escreva uma descrição curta.</button></li>
+                    <li data-t="33.4"><button type="button" class="passos-uso__botao"><strong>Confira o local.</strong> Se o pino estiver longe de você, toque em “Ajustar no mapa”, arraste o mapa e toque em “Confirmar posição”.</button></li>
+                    <li data-t="37.5"><button type="button" class="passos-uso__botao"><strong>Toque em “Registrar ocorrência”.</strong> Quando aparecer “Relato registrado”, toque em “Compartilhar relato” para enviar à Defesa Civil ou à brigada.</button></li>
+                    <li data-t="42.8"><button type="button" class="passos-uso__botao"><strong>Volte ao mapa</strong> e veja o seu relato junto aos focos do INPE.</button></li>
                 </ol>
                 <p class="aviso aviso--compacto">{!! $ic('info') !!}<span><strong>Sem conta, sem cadastro.</strong> O app não pede login e não coleta dados pessoais identificáveis.</span></p>
             </div>
@@ -490,7 +536,9 @@
         <h2>A Serra da Paulista precisa de mais olhos.</h2>
         <p>Cada relato encurta o caminho entre a primeira fumaça e a primeira equipe em campo.</p>
         <a href="{{ $apk }}" class="btn btn--brasa" target="_blank" rel="noopener">{!! $ic('download') !!} Baixar para Android</a>
-        <a href="{{ route('app.demo') }}" class="btn btn--vidro" target="_blank" rel="noopener">Experimentar o protótipo {!! $ic('arrow') !!}</a>
+        {{-- Versão para computador: pronta, escondida até o lançamento. Para exibir, remova o atributo hidden. --}}
+        {{-- Continua disabled de propósito: ao exibir, remova também o disabled e o aria-disabled. --}}
+        <button type="button" class="btn btn--desativado" disabled aria-disabled="true" aria-hidden="true" hidden>{!! $ic('monitor') !!} Versão para computador</button>
         <a href="{{ $repositorio }}" class="btn btn--vidro" target="_blank" rel="noopener">{!! $ic('code') !!} Código no GitHub</a>
         <p class="aviso-apk">Grátis · Android 7.0 ou mais novo · na instalação, permita instalar apps de fontes desconhecidas.</p>
     </div>
@@ -509,7 +557,6 @@
             <div class="rodape__links">
                 <a href="{{ route('ferramenta') }}">Sobre a ferramenta (vídeo e documento-síntese)</a>
                 <a href="{{ $apk }}" target="_blank" rel="noopener">Baixar o app (APK)</a>
-                <a href="{{ route('app.demo') }}" target="_blank" rel="noopener">Demonstração do app</a>
                 <a href="{{ $repositorio }}/tree/main/app-android" target="_blank" rel="noopener">Código do app Android</a>
                 <a href="https://terrabrasilis.dpi.inpe.br/queimadas/portal/" target="_blank" rel="noopener">Portal BDQueimadas (INPE)</a>
             </div>

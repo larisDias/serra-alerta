@@ -41,7 +41,7 @@ lista de relatos, prevenção, emergência, configurações e sobre. Relatos env
 excluídos (o servidor devolve um token de exclusão que fica guardado no `localStorage`). As categorias são as mesmas do app: queima controlada, queimada
 irregular, incêndio florestal e fumaça não identificada.
 
-O vídeo da página "Sobre a ferramenta" deve ser salvo em `landing/public/video/como-usar.mp4` (MP4/H.264, gravação de tela do celular com toques visíveis, sem áudio). Enquanto o arquivo não existir, a página mostra o aviso "Vídeo em breve".
+O vídeo da página "Sobre a ferramenta" deve ser salvo em `landing/public/video/como-usar.mp4` (MP4/H.264, gravação de tela do celular com toques visíveis e sons suaves de toque; o vídeo começa mudo e o botão de som ativa o áudio). Enquanto o arquivo não existir, a página mostra o aviso "Vídeo em breve".
 
 Os focos de calor vêm dos CSVs diários públicos do INPE (`dataserver-coids.inpe.br`), filtrados para o mesmo recorte
 do app (que lê os CSVs dos últimos 7 dias direto no aparelho) e guardados em cache pelo Laravel no site. Sem internet, a camada aparece como indisponível e o resto funciona normalmente.
